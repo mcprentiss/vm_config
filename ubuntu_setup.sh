@@ -43,6 +43,14 @@ sudo apt install -y \
 # 5. Quality of Life Tweaks
 echo "--- Applying QoL Tweaks ---"
 
+
+# 6. github repos
+# --- Install Fastfetch via PPA ---
+echo "--- Adding Fastfetch PPA ---"
+sudo add-apt-repository -y ppa:zhanghua/fastfetch
+sudo apt update
+sudo apt install -y fastfetch
+
 # Fix 'bat' command name (Ubuntu calls it batcat)
 mkdir -p ~/.local/bin
 ln -s /usr/bin/batcat ~/.local/bin/bat
