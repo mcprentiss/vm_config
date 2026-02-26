@@ -43,6 +43,21 @@ sudo apt install -y \
 # 5. Quality of Life Tweaks
 echo "--- Applying QoL Tweaks ---"
 
+# 1. Get the latest release download URL for the amd64 .deb file
+FF_DEB_URL=$(curl -s https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest \
+    | grep "browser_download_url.*linux-amd64.deb" \
+    | cut -d : -f 2,3 \
+    | tr -d \" \
+    | xargs)
+
+# 2. Download and install
+wget -qO /tmp/fastfetch.deb "$FF_DEB_URL"
+sudo apt install -y /tmp/fastfetch.deb
+
+# 3. Clean up
+rm /tmp/fastfetch.deb
+
+echo "Fastfetch installed successfully!"
 
 # 6. github repos
 # --- Install Fastfetch via PPA ---
