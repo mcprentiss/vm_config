@@ -40,6 +40,17 @@ sudo apt install -y \
     ripgrep \
     zsh
 
+echo "--- Installing Power User Utilities ---"
+sudo apt install -y \
+    kitty \
+    ranger \
+    tmux \
+    dunst \
+    neovim \
+    bottom \
+    ncdu \
+    tldr 
+
 # 5. Quality of Life Tweaks
 echo "--- Applying QoL Tweaks ---"
 
@@ -58,6 +69,8 @@ sudo apt install -y /tmp/fastfetch.deb
 rm /tmp/fastfetch.deb
 
 echo "Fastfetch installed successfully!"
+
+
 
 # Fix 'bat' command name (Ubuntu calls it batcat)
 mkdir -p ~/.local/bin
