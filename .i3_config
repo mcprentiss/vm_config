@@ -1,0 +1,307 @@
+# i3 config file (v4)
+# From Video : http://www.youtube.com/watch?v=yAq_Enj_d2Q
+#
+# TODO
+# - toggle tiling / floating
+#     bindsym $mod+mod1+space floating toggle
+#     change focus between tiling / floating windows
+#     bindsym $mod+space focus mode_toggle
+#     bindsym $mod+d focus mode_toggle
+# - i3 has it in reverse; h = vertical ; v = horizontal, 41.8781Â° N, 87.6298Â° W split in horizontal orientation
+#     bindsym $mod+b split v
+#     bindsym $mod+v split h
+# - exec xmodmap ~/.Xmodmap
+# i3 -CV - shows you problems in the config without having to restart i3
+
+# Mod4 = Super key
+# Mod1 = Alt key
+set $mod Mod4
+set $mod1 Mod1
+
+# Testing
+
+bindsym $mod+Shift+minus move scratchpad
+bindsym $mod+minus scratchpad show
+bindsym $mod+Return [class="xterm"] scratchpad show
+# bindsym Shift+F12 [con_mark="thescratch$"] mark thescratch, move scratchpad
+# bindsym F12 scratchpad show,focus parent split v, [con_mark="thescratch$"] floating disable, focus
+
+# Font for window titles. Will also be used by the bar unless a different font
+# is used in the bar {} block below. ISO 10646 = Unicode
+# The font above is very space-efficient, that is, it looks good, sharp and
+# clear in small sizes. However, if you need a lot of unicode glyphs or
+# right-to-left text rendering, you should instead use pango for rendering and
+# chose a FreeType font, such as:
+# font pango:Font Awesome 5, System San Francisco Display 10
+font pango: System San Francisco Display 10
+
+# Use Mouse+$mod to drag floating windows to their wanted position
+floating_modifier $mod
+
+# kill focused window
+bindsym $mod+c kill
+
+# setting wallpaper
+exec_always --no-startup-id feh --bg-scale /home/mp466/Pictures/stripes_GLOBE-1850-2019-MO.png
+
+# Notification daemon# notification
+exec pkill dunst
+exec --no-startup-id dunst -config ~/.dunstrc
+# exec pkill dunst && dunst -config ~/.dunstrc &
+# Make windows fade in and out and look nice
+exec --no-startup-id compton -bc -r 3 -l 4 -t 4 --shadow-include '_GTK_FRAME_EXTENTS_@:c' --backend xrender
+# exec --no-startup-id compton -bc -r 3 -l 4 -t 4 --shadow-include '_GTK_FRAME_EXTENTS_@:c'
+# adjusts the color temperature of your screen according to your surroundings
+exec --no-startup-id redshift
+# turns on daemon for clipboard in rofi
+exec --no-startup-id greenclip daemon
+
+# ???????????
+exec --no-startup-id clipit
+# automatically start up a screen locker
+exec --no-startup-id xautolock -time 15 -locker '/home/mp466/.i3lock-fancy/lock'
+# automatically start the daemon and fork it into the background
+#exec --no-startup-id urxvtd --quiet --opendisplay --fork
+# exec --no-startup-id /home/mp466/Downloads/rxvt-unicode-9.22/src/rxvtd --quiet --opendisplay --fork
+exec --no-startup-id xrdb /home/mp466/.Xdefaults
+
+# Sync clipboards
+# https://www.reddit.com/r/vim/comments/8mnu4a/vimtmuxlinux_users_before_i_lose_my_mind_how_do_i/
+# exec --no-startup-id /usr/bin/autocutsel -f -s PRIMARY
+# exec --no-startup-id /usr/bin/autocutsel -f -s CLIPBOARD
+# exec --no-startup-id /usr/bin/autocutsel -f -s SECONDARY
+#Now I just yank text, with y or YY, and paste it with shift insert or ctrl v anywhere else.
+
+# bindsym --release Caps_Lock exec pkill -SIGRTMIN+10 i3blocks
+# bindsym --release Num_Lock exec pkill -SIGRTMIN+10 i3blocks
+
+# start rofi
+bindsym $mod1+Return exec /home/mp466/.vim/scripts/rofi-scripts-collection/rofi-bangs.sh
+
+# rofi replacement for i3-dmenu-desktop
+bindsym $mod1+space exec --no-startup-id rofi -show window -font "System San Francisco Display 12"
+bindsym $mod+space exec --no-startup-id rofi -show run -lines 10 -font "System San Francisco Display 12"
+
+# bindsym $mod+V split v
+# bindsym $mod+H split h
+
+# change focus
+bindsym $mod+h focus left
+bindsym $mod+j focus down
+bindsym $mod+k focus up
+bindsym $mod+l focus right
+
+# move focused window (Super+Alt+vimkeys)
+bindsym $mod+mod1+h move left
+bindsym $mod+mod1+j move down
+bindsym $mod+mod1+k move up
+bindsym $mod+mod1+l move right
+
+# enter fullscreen mode, change container layout (stacked, tabbed, toggle split)
+bindsym $mod+f fullscreen
+bindsym $mod+s layout stacking
+bindsym $mod+w layout tabbed
+bindsym $mod+e layout toggle split
+
+# focus the parent/child container
+bindsym $mod1+a focus parent
+bindsym $mod1+b focus child
+
+################
+
+# define names for workspaces
+set $ws1    "1: Xterm "
+set $ws2    "2:Vimwiki "
+set $ws3    "3: Chrome "
+set $ws4    "4:  Files "
+set $ws5    "5: Documents "
+set $ws6    "6:  Media "
+set $ws7    "7:  Design "
+set $ws8    "8:  Chat "
+set $ws9    "9:  General "
+set $ws10   "10:  Settings "
+
+# switch to workspace
+# https://github.com/redhat69/dotfiles/blob/master/.i3/config
+bindsym $mod+1 workspace $ws1
+bindsym $mod+2 workspace $ws2
+bindsym $mod+3 workspace $ws3
+bindsym $mod+4 workspace $ws4
+bindsym $mod+5 workspace $ws5
+bindsym $mod+6 workspace $ws6
+bindsym $mod+7 workspace $ws7
+bindsym $mod+8 workspace $ws8
+bindsym $mod+9 workspace $ws9
+bindsym $mod+0 workspace $ws10
+
+bindsym $mod+F3 workspace $ws3; exec google-chrome
+bindsym $mod+F4 workspace $ws4; exec thunar
+
+# exec i3-msg 'workspace $ws3; exec google-chrome ; sleep 2'
+# exec i3-msg 'workspace $ws4; exec firefox ; sleep 2'
+for_window [class="firefox"] fullscreen enable
+
+# move focused container to workspace
+bindsym $mod+mod1+1 move container to workspace 1
+bindsym $mod+mod1+2 move container to workspace 2
+bindsym $mod+mod1+3 move container to workspace 3: Vimwiki
+bindsym $mod+mod2+4 move container to workspace 4
+bindsym $mod+mod1+5 move container to workspace 5
+bindsym $mod+mod1+6 move container to workspace 6
+bindsym $mod+mod1+7 move container to workspace 7
+bindsym $mod+mod1+8 move container to workspace 8
+bindsym $mod+mod1+9 move container to workspace 9: web
+bindsym $mod+mod1+0 move container to workspace 10
+
+# switching between workspace http://i3wm.org/docs/userguide.html#_changing_named_workspaces_moving_to_workspaces
+bindsym $mod+n workspace next
+bindsym $mod+p workspace prev
+bindsym $mod+mod1+n move container to workspace next
+bindsym $mod+mod1+p move container to workspace prev
+
+# https://www.reddit.com/r/i3wm/wiki/faq/assign_emulator
+
+# Now you can match on this window in your i3 config like this:
+# assign [class="/home/mp466/Downloads/rxvt-unicode-9.22/src/rxvt"] 1
+
+# reload the configuration file
+bindsym $mod+mod1+c reload
+# restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
+bindsym $mod+mod1+r restart
+# exit i3 (logs you out of your X session)
+bindsym $mod+mod1+e exec "i3-nagbar -t warning -m 'Really want to exit i3?' -b 'Yes, exit i3' 'i3-msg exit'"
+
+# resize window (you can also use the mouse for that)
+mode "resize" {
+        bindsym h resize shrink width 10 px or 10 ppt
+        bindsym j resize grow height 10 px or 10 ppt
+        bindsym k resize shrink height 10 px or 10 ppt
+        bindsym l resize grow width 10 px or 10 ppt
+        bindsym Escape mode "default"
+        bindsym Return mode "default"
+}
+bindsym $mod+r mode "resize"
+
+# bindsym $mod+u     [instance="dropdown"] scratchpad show; [instance="dropdown"] move position center
+# bindsym $mod+a     [instance="math"] scratchpad show; [instance="math"] move position center
+set $term --no-startup-id xterm
+for_window [class="^.*"] border pixel 3
+
+#---Dropdown/Scratchpad Windows---# #
+# First I have a tmux window used for background scripts.
+# I'll later bind this to mod+u.
+for_window [instance="dropdown"] floating enable
+for_window [instance="dropdown"] resize set 625 400
+for_window [instance="dropdown"] move scratchpad
+for_window [instance="dropdown"] border pixel 5
+exec --no-startup-id $term -n dropdown -e tmux
+
+# sleep 1 adds a small delay to prevent possible race conditions with suspend [4]
+set $locker i3lock && sleep 1
+
+set $mode_system System (l) lock, (e) logout, (s) suspend, (h) hibernate, (r) reboot, (x) shutdown
+mode "$mode_system" {
+        bindsym l exec --no-startup-id $locker, mode "default"
+        bindsym e exec --no-startup-id i3-msg exit, mode "default"
+        bindsym s exec --no-startup-id $locker && systemctl suspend, mode "default"
+        bindsym h exec --no-startup-id $locker && systemctl hibernate, mode "default"
+        bindsym r exec --no-startup-id systemctl reboot, mode "default"
+        bindsym x exec --no-startup-id systemctl poweroff -i, mode "default"
+        bindsym Escape mode "default"
+        bindsym Return mode "default"
+}
+bindsym $mod+y mode "$mode_system"
+
+set $App_launch System (f) firefox, (k) netsurf, (b) brave-browser, (g) chrome, (z) zathura, (h) thunar, (Print) Screenshot, (t) rxvt, (x) xterm, (s) vroom-vroom, (d) SpiderOakONE
+mode "$App_launch" {
+        bindsym f exec --no-startup-id firefox, mode "default"
+        bindsym k exec --no-startup-id netsurf-gtk, mode "default"
+        bindsym g exec --no-startup-id google-chrome, mode "default"
+        bindsym b exec --no-startup-id brave-browser-stable, mode "default"
+        bindsym z exec --no-startup-id zathura, mode "default"
+        bindsym h exec --no-startup-id thunar, mode "default"
+        bindsym Print exec --no-startup-id scrot $HOME/Pictures/Screenshots/screenshot_from_%Y-%m-%d_%H:%M:%S.png, mode "default"
+# bindsym $mod+t exec lxterminal
+        bindsym t exec --no-startup-id rxvt, mode "default"
+        bindsym x exec --no-startup-id xterm, mode "default"
+        bindsym s exec --no-startup-id /opt/SuperTuxKart-1.4-linux-x86_64/run_game.sh, mode "default"
+        bindsym d exec --no-startup-id /usr/bin/SpiderOakONE, mode "default"
+        bindsym Return mode "default"
+        bindsym Escape mode "default"
+}
+bindsym $mod+b mode "$App_launch"
+
+set $mode_display Ext Screen (v) VGA ON, (h) HDMI ON, (x) VGA OFF, (y) HDMI OFF
+mode "$mode_display" {
+    bindsym v exec --no-startup-id xrandr --output VGA-1 --auto --right-of eDP-1, mode "default"
+    bindsym h exec --no-startup-id xrandr --output HDMI-1 --auto --right-of eDP-1, mode "default"
+    bindsym x exec --no-startup-id xrandr --output VGA-1 --auto --off, mode "default"
+    bindsym y exec --no-startup-id xrandr --output HDMI-1 --auto --off, mode "default"
+    bindsym Return mode "default"
+    bindsym Escape mode "default"
+}
+bindsym $mod+x mode "$mode_display"
+
+# Suspend does not turn off your computer. It puts the computer and all peripherals on a low power consumption mode.
+# Hibernate saves the state of your computer to the hard disk and powers off. Resuming, the saved state is restored to RAM.
+
+# thin borders
+hide_edge_borders both
+
+set $bg-color            #2f343f
+set $inactive-bg-color   #2f343f
+set $text-color          #f3f4f5
+set $inactive-text-color #676E7D
+set $urgent-bg-color     #E53935
+
+# set $background  #000000
+# set $foreground  #FEFEFE
+# set $black       #282828
+# set $darkgrey    #666E79
+# set $darkred     #cc241d
+# set $red         #fb4934
+# set $darkgreen   #98971a
+# set $green       #b8bb26
+# set $darkyellow  #d79921
+# set $yellow      #fabd2f
+# set $darkblue    #458588
+# set $blue        #83a598
+# set $darkmagenta #b16286
+# set $magenta     #d3869b
+# set $darkcyan    #689d6a
+# set $cyan        #8ec07c
+# set $lightgrey   #a89984
+# set $white       #ebdbb2
+
+# window colors
+#                       border              background         text                 indicator
+client.focused          $bg-color           $bg-color          $text-color          #00ff00
+client.unfocused        $inactive-bg-color  $inactive-bg-color $inactive-text-color #00ff00
+client.focused_inactive $inactive-bg-color  $inactive-bg-color $inactive-text-color #00ff00
+client.urgent           $urgent-bg-color    $urgent-bg-color   $text-color          #00ff00
+
+# Start i3bar to display a workspace bar (plus the system information i3status)
+bar {
+    mode hide
+    font pango:Font Awesome, Futura Bk Bt Bold 10
+    # font pango:System San Francisco Display 10
+    status_command i3blocks -c /home/mp466/.config/i3blocks/i3blocks.conf
+    tray_output primary
+}
+
+# sound control
+# https://faq.i3wm.org/question/125/how-to-change-the-systems-volume/?answer=249#post-id-249
+# https://faq.i3wm.org/question/3747/enabling-multimedia-keys.1.html
+
+bindsym XF86AudioRaiseVolume exec amixer -q set Master 5%+ -q
+bindsym XF86AudioLowerVolume exec amixer -q set Master 5%- -q
+bindsym XF86AudioMute exec amixer -q set Master toggle
+
+# https://github.com/redhat69/dotfiles/blob/master/.i3/config
+# toggle pause cmus music player
+bindsym XF86AudioPlay exec cmus-remote -u
+bindsym XF86HomePage exec chromium http://youtube.com
+bindsym XF86Mail exec chromium https://mail.google.com
+# bindsym $mod+Alt+v exec ~/.vim-anywhere/bin/run
+
+# vim:filetype=i3
