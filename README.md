@@ -15,7 +15,7 @@ sudo apt install build-essential linux-headers-$(uname -r)
 2. Add the NVIDIA CUDA Repository
 Instead of downloading a massive .run file, use NVIDIA's cuda-keyring. This hooks directly into apt so you get future updates naturally.
 
-Bash
+Bash 
 wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
 sudo dpkg -i cuda-keyring_1.1-1_all.deb
 sudo apt update
