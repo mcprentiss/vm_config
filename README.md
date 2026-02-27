@@ -31,9 +31,8 @@ sudo apt install cuda-toolkit
 CUDA installs itself into /usr/local/cuda, but your system doesn't know to look there yet. You need to add it to your path.  
 
 Open your shell config (like ~/.bashrc or ~/.zshrc):  
-
-Bash  
-# Add these lines to the very bottom of the file  
+  
+Add these lines to the very bottom of the file  
 export PATH=/usr/local/cuda/bin${PATH:+:${PATH}}  
 export LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}  
 Save the file, and then apply the changes immediately with:  
