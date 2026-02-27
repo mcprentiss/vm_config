@@ -1,0 +1,3471 @@
+#!/usr/bin/env bash
+
+# test
+# https://www.commandlinefu.com/commands/browse
+# function scrypt() {
+# [ -n "$1" ] && { echo '. <(echo "$(tail -n+2 $0|base64 -d|mcrypt -dq)"); exit;' >"$1.scrypt";cat "$1"|mcrypt|base64 >>"$1.scrypt";chmod +x "$1.scrypt";};
+# }
+
+# mcd: menu driven cd (intended for .bashrc)
+# https://gist.github.com/okken/b94115afe5ca004dcdf2abb89adff627
+function mcd {
+  PS3="Which directory: "
+
+  select d in '/home/mp466/Downloads'\
+              '/home/mp466/Desktop'
+  do
+     cd $d
+     break
+  done
+}
+
+# pomo - pomodoro timer
+function pomo() {
+    arg1=$1
+    shift
+    args="$*"
+
+    min=${arg1:?Example: pomo 15 Take a break}
+    sec=$((min * 60))
+    msg="${args:?Example: pomo 15 Take a break}"
+
+    while true; do
+        sleep "${sec:?}" && echo "${msg:?}" && notify-send -u critical -t 0 "${msg:?}"
+    done
+}
+
+# configure ripgrep to always search from my home directory
+# https://stackoverflow.com/questions/71731379/how-can-i-configure-ripgrep-to-always-search-from-my-home-directory
+function rgh()
+{
+    rg "$@" ~/
+}
+
+# quickfix like behavior for vim-gitgutter
+
+#function! NextHunkAllBuffers()
+#  let line = line('.')
+#  GitGutterNextHunk
+#  if line('.') != line
+#    return
+#  endif
+#
+#  let bufnr = bufnr('')
+#  while 1
+#    bnext
+#    if bufnr('') == bufnr
+#      return
+#    endif
+#    if !empty(GitGutterGetHunks())
+#      normal! 1G
+#      GitGutterNextHunk
+#      return
+#    endif
+#  endwhile
+#endfunction
+
+#function! PrevHunkAllBuffers()
+#  let line = line('.')
+#  GitGutterPrevHunk
+#  if line('.') != line
+#    return
+#  endif
+#
+#  let bufnr = bufnr('')
+#  while 1
+#    bprevious
+#    if bufnr('') == bufnr
+#      return
+#    endif
+#    if !empty(GitGutterGetHunks())
+#      normal! G
+#      GitGutterPrevHunk
+#      return
+#    endif
+#  endwhile
+#endfunction
+
+# nmap <silent> ]c :call NextHunkAllBuffers()<CR>
+# nmap <silent> [c :call PrevHunkAllBuffers()<CR>
+
+# use subshell to nice function
+# https://eklitzke.org/how-to-nice-a-bash-function
+function foo() {
+  (renice 10 $BASHPID
+   gzip -d bigfile.gz
+   grep "hello world" /dev/urandom)
+}
+
+function snow () {
+clear;while :;do echo $LINES $COLUMNS $(($RANDOM%$COLUMNS));sleep 0.1;done|gawk '{a[$3]=0;for(x in a) {o=a[x];a[x]=a[x]+1;printf "\033[%s;%sH ",o,x;printf "\033[%s;%sH*\033[0;0H",a[x],x;}}'
+}
+
+function bukuadd() {
+    xsel | buku -a
+}
+
+#  how_in bash get length of array,  Igor Chubin
+function how_in() {
+where="$1"; shift
+IFS=+ curl "https://cht.sh/$where/ $*"
+}
+
+# http://owen.cymru/sf-a-quick-way-to-search-for-some-thing-in-bash-and-edit-it-with-vim-2/
+function ssf() {
+    if [ $# -lt 1 ] ;
+        then echo -e "Usage: Supply string to search for";
+             echo -e "Example: ssf write"
+        return 0;
+    fi
+
+  printf -v search "%q" "$*"
+  include="yml,js,json,php,md,txt,styl,pug,jade,html,config,py,cpp,c,go,hs,rb,conf,fa,lst,f,f90"
+  exclude=".config,.git,node_modules,vendor,build,yarn.lock,*.sty,*.bst,*.coffee,dist"
+  rg_command='rg --column --line-number --no-heading --fixed-strings --ignore-case --no-ignore --hidden --follow --color "always" -g "*.{'$include'}" -g "!{'$exclude'}/*"'
+  files=`eval $rg_command $search | fzf --ansi --multi --reverse | awk -F ':' '{print $1":"$2":"$3}'`
+  [[ -n "$files" ]] && ${EDITOR:-vim} "$files"
+}
+
+# open github page
+function gopen() {
+    # project=$(git config --local remote.origin.url | sed "s/git@github.com\://" | sed "s/\.git//")
+    # url="http://github.com/$project/commit/$1"
+    project=$(git config --local remote.origin.url)
+    url="$project"
+    xdg-open "$url"
+}
+
+# search directoy with fzf, open with vim
+function fvim() {
+  local IFS=$'\n'
+  local files=($(fzf-tmux --query="$1" --multi --select-1 --exit-0))
+  [[ -n "$files" ]] && ${EDITOR:-vim} "${files[@]}"
+}
+
+function vimg() {
+  vim <(grep "$@")
+}
+
+# correct version, using sponge
+# grep -v badpattern file.txt | sponge file.txt
+
+# What happens here is that sponge will buffer all of the data it gets on stdin
+# into memory. When it detects the EOF condition on stdin it will then write
+# all of the data it buffered to a file named by its argument.
+
+function apt-history(){
+    case "$1" in
+        install)
+            grep 'install ' /var/log/dpkg.log
+            ;;
+        upgrade|remove)
+            grep "$1" /var/log/dpkg.log
+            ;;
+        rollback)
+            grep upgrade /var/log/dpkg.log | \
+                grep "$2" -A10000000 | \
+                grep "$3" -B10000000 | \
+                awk '{print $4"="$5}'
+                ;;
+            *)
+            cat /var/log/dpkg.log
+        ;;
+    esac
+}
+
+function back(){
+   cd "$OLDPWD" || exit
+}
+
+# DESC: cli calculator (Ctrl+D to exit)
+# DEMO: http://www.youtube.com/watch?v=JkyodHenTuc
+function calc() {
+  if which python3 &>/dev/null; then
+    python3 -ic "from math import *; import cmath"
+  elif which bc &>/dev/null; then
+    bc -q -l
+  else
+    echo "Requires python2, python3 or bc for calculator features"
+  fi
+}
+
+function ddefine (){
+   curl -s dict://dict.org/d:"$1" | grep -E --color=auto -v "^(220|250|150|151|221)"
+}
+
+# cli eictionary 
+function dictmcp () {
+   # if [[ $1 == (d|m) ]]; then
+       # curl dict://dict.org/"$1":"$2"
+       curl dict://dict.org/$1:$2 | $PAGER
+   # else
+       echo 'Unknown command. Use (d)efine or (m)atch.'
+   # fi
+}
+
+function doi_to_bibtex(){
+   url="http://dx.doi.org/"$1
+   curl -LH 'Accept: application/x-bibtex' "$url"
+}
+
+# pub med ID to bibtex lookup
+function pmid_to_bibtex(){
+   curl -s "https://www.ncbi.nlm.nih.gov/pubmed/$1?report=xml&format=raw" | sed -e 's/&gt;/>/g' -e 's/&lt;/</g' | med2xml | xml2bib -nb -b
+   # curl -s "https://www.ncbi.nlm.nih.gov/pubmed/$1?report=xml&format=raw" | sed -e 's/&gt;/>/g' -e 's/&lt;/</g' | med2xml | xml2bib -nb -b >> bib.bib
+}
+
+function extract()
+{
+   if [ -f "$1" ] ; then
+       case $1 in
+            *.tar.bz2)   tar xvjf "$1"         ;;
+            *.tar.gz)    tar xvzf "$1"         ;;
+            *.bz2)       bunzip2 "$1"          ;;
+            *.rar)       unrar x "$1"          ;;
+            *.gz)        gunzip "$1"           ;;
+            *.xz)        xz --decompress "$1"  ;;
+            *.tar)       tar xvf "$1"          ;;
+            *.tbz2)      tar xvjf "$1"         ;;
+            *.tgz)       tar xvzf "$1"         ;;
+            *.zip)       unzip "$1"            ;;
+            *.Z)         uncompress "$1"       ;;
+            *.7z)        7z x "$1"             ;;
+            *)           echo "'$1' cannot be extracted via >extract<" ;;
+       esac
+   else
+       echo "'$1' is not a valid file"
+   fi
+}
+
+function key_binding (){
+   bind -P|grep "can be found"|sort | awk '{printf "%-40s", $1} {for(i=6;i<=NF;i++){printf "%s ", $i}{printf"\n"}}'
+}
+
+function lsd (){
+   /bin/ls -dF "$1" "$(/bin/ls -F | sed -n "/[@/]/s=[@/]==p")"
+}
+
+function lsdir(){
+   if [ ! "$1" ] ; then
+        DIR=".";
+   else
+        DIR="$1";
+   fi;
+   for d in $(ls -1 "$DIR"); do
+        if test -d "$d"; then
+            echo "$d";
+        fi
+   done
+   unset DIR;
+}
+
+# Create a new directory and enter it
+function mkd(){
+   mkdir -p "$@" && cd "$_" || exit ;
+}
+
+function mp3dl(){
+   youtube-dl --restrict-filenames --extract-audio --audio-format mp3 "$1"
+}
+
+# https://www.commandlinefu.com/commands/view/15246/convert-entire-music-library
+# Usage
+# lc Old_Directory New_DIrectory Old_Format New_Format
+# lc ~/Music ~/Music_ogg mp3 ogg
+function lc() {
+    od="$1"; nd="$2"; of=$3; nf=$4; cp -rl "$od" "$nd";
+    parallel -0 "ffmpeg -i {1} -loglevel error -q:a 6 {1.}.{2} && { rm {1}; echo {1.}.{2}; }" :::: <(find "$nd" -type f -iname \*$of -print0) ::: "$nf";
+}
+
+function mp4convert(){
+   # for f in `ls -1 J_Dilla_-_Workinonit_-_Donuts_Full_Album-5nO7IA1DeeI.mp4` ; do
+   for f in *.mp4; do
+       name=${f//.mp4$//}
+       ffmpeg -i "$f" -vn -ar 44100 -ac 2 -ab 192k -f mp3 "$name.mp3"
+   done
+}
+
+function webmconvert(){
+   for f in *.webm; do
+       name=${f//.mp4$//}
+       ffmpeg -i "$f" -vn -ar 44100 -ac 2 -ab 192k -f mp4 "$name.mp4"
+   done
+}
+
+function mplayer-createplaylist(){
+   if [ $# -ne 1 ] ;
+       then echo "Usage: mplayer-creatplaylist SEARCHTERM";
+            echo "Example: mplayer-creatplaylist mp3 "
+            echo -e "Search through files in directory. Make playlist"
+            echo -e "ls --ignore="*.m3u" --ignore="*.pos" | grep -i "$1" | sort -u > "$1".m3u ;"
+       return 0;
+   fi
+   ls --ignore="*.m3u" --ignore="*.pos" | grep -i "$1" | sort -u > "$1".m3u ;
+}
+
+function nn(){
+   NOTE_DIR=~/
+   NOTE_NAME="$1"
+   TIMESTAMP="$(date +%Y-%m-%d_%H.%S)"
+   vim "${NOTE_DIR}/${TIMESTAMP}-${NOTE_NAME}.txt"
+}
+
+function nuke(){
+if [ $# -ne 1 ] ;
+    then echo "Usage: nuke APPLICATION-NAME";
+    return 0;
+fi
+export appl_name=$1
+ps -ef | perl -ane 'system("kill -9 $F[1]") if/mp466.*$ENV{"appl_name"}/'
+unset appl_name
+}
+
+function print_column (){
+if [ $# -lt 2 ] ;
+then
+   echo "Usage: print_column COLUMN <CPMDOUTFILENAME>";
+else
+   export cpmd_index=$(($1-1))
+   export cpmd_file=$2
+   cat $cpmd_file | perl -wane 'print $F[$ENV{"cpmd_index"}],"\n" if /\s+\d+\s+(([.]|\d)+\s+){2}[-](([.]|[-]|\d)+\s+){3}/';
+   unset cpmd_index
+   unset cpmd_file;
+fi
+}
+
+# mplayer to display webcam
+# hit 's' to take screenshot, will save in current folder
+# hit 'S' to take series of screenshot, will save in current folder
+# hit 'f' to toggle fullscreen
+# hit 'T' to toggle stay-on-top
+# hit 'q' or 'Esc' to quit
+# https://wiki.archlinux.org/index.php/...
+
+function ranger-cd {
+   tempfile="$(mktemp -t tmp.XXXXXX)"
+   /usr/local/bin/ranger --choosedir="$tempfile" "${@:-$(pwd)}"
+   test -f "$tempfile" &&
+   if [ "$(cat -- "$tempfile")" != "$(echo -n $(pwd))" ]; then
+        cd -- "$(cat "$tempfile")" || exit
+   fi
+   rm -f -- "$tempfile"
+}
+
+function prompt_helper_pwd () {
+   local pwd_length=20
+   local myPWD=$(echo $PWD | sed "s/\/home\/mp466/~/")
+   if [ $(echo -n "$myPWD" | wc -c | tr -d " ") -gt "$pwd_length" ]
+       then
+       echo -n "...$(echo -n "$myPWD" | sed -e "s/.*\(.\{$pwd_length\}\)/\1/")"
+   else
+       echo -n "$(echo -n "$myPWD")"
+   fi
+}
+
+function mcp_find() {
+    if [ $# -ne 1 ] ;
+        then echo "Usage: mcp_find FILE_TO_FIND ";
+             echo -e "Search through files in /home/mp466 directory"
+             echo -e "find -name "*" -not -path ".\/\.*" > .mcp.db ; sed -i  's/^./\/home\/mp466/g' .mcp.db"
+        return 0;
+    fi
+    grep "$1" ~/.mcp.db ;
+}
+
+function surf_websearch() {
+surfraw $(sr -elvi | awk -F'-' '{print $1}' | sed '/:/d' | awk '{$1=$1};1' | rofi -kb-row-select "Tab" -kb-row-tab "Control+space" -color-window "#000000, #000000, #000000" -color-normal "#000000, #b3e774, #000000, #b3e774, #000000" -color-active "#000000, #b3e774, #000000, #b3e774, #000000" -color-urgent "#000000, #b3e774, #000000, #b3e774, #000000" -dmenu -mesg ">>> Tab = Autocomplete" -i -p "websearch: " ) ;
+}
+
+function surf_bookmark(){
+    if [ $# -ne 1 ] ;
+        then echo "Usage: surf_bookmark WEBSITE_TO_GOTO ";
+        echo -e "Download all files with specific extension on a webpage"
+        return 0;
+    fi
+
+surfraw "$(cat < ~/.config/surfraw/bookmarks | sed '/^$/d' | sed '/^#/d' | sed '/^\//d' | sort -n | rofi -color-window "#000000, #000000, #000000" -color-normal "#000000, #b3e774, #000000, #b3e774, #000000" -color-active "#000000, #b3e774, #000000, #b3e774, #000000" -color-urgent "#000000, #b3e774, #000000, #b3e774, #000000" -dmenu -mesg ">>> Edit to add new bookmarks at ~/.config/surfraw/bookmarks" -i -p "bookmarks: ")" ;
+}
+
+function mcp_rofi(){
+    if [ $# -ne 0 ] ;
+        then echo "Usage: mcp_rofi FILE_TO_FIND ";
+        echo -e "updatedb -l 0 -o ~/.mcp_update.db -U ~/"
+        return 0;
+    fi
+
+locate -d /home/mp466/.mcp_update.db  mp466 | rofi -threads 0 -width 100 -color-window "#000000, #000000, #000000" -color-normal "#000000, #b3e774, #000000, #b3e774, #000000" -color-active "#000000, #b3e774, #000000, #b3e774, #000000" -color-urgent "#000000, #b3e774, #000000, #b3e774, #000000" -dmenu -i -p "locate:";
+}
+
+function taocl() {
+  if [ $# -gt 0 ]; then
+    echo -e "The Art of the Command Line - daily tip"
+    echo -e "\nGoogle: http://lmgtfy.com/?q=intitle%3Aindex.of+mp3+-html+-htm+-php+-asp+-txt+-pls+madonna"
+    return 1
+  fi
+   curl -s https://raw.githubusercontent.com/jlevy/the-art-of-command-line/master/README.md |
+        sed '/cowsay[.]png/d' |
+        pandoc -f markdown -t html |
+        xmlstarlet fo --html --dropdtd |
+        xmlstarlet sel -t -v "(html/body/ul/li[count(p)>0])[$RANDOM mod last()+1]" |
+        xmlstarlet unesc | fmt -80 | iconv -t US
+}
+
+#-------- Wget (Retrieve Files From The Web)
+function wget-extension() {
+  if [ $# -lt 2 ]; then
+    echo -e "Download all files with specific extension on a webpage"
+    echo -e "\nUsage: wget-extension <file_extension> <url>"
+    echo -e "\nExample:\nwget-extension mp4 http://example.com/files/"
+    echo -e "wget-extension mp3,ogg,wma http://samples.com/files/"
+    echo -e "\nGoogle: http://lmgtfy.com/?q=intitle%3Aindex.of+mp3+-html+-htm+-php+-asp+-txt+-pls+madonna"
+    return 1
+  fi
+
+#  outputdir_name=$(echo "$2" | rev | cut -d\/ -f2-3 | rev)
+
+  outputdir_name=$(echo "$2" | rev | cut -d\/ -f2 | rev)
+  http_name=$(echo "$2" | sed 's/\\//g')
+
+  echo "## outputdir_name"
+  echo "$outputdir_name"
+  echo "### http_name"
+  echo "$http_name"
+  echo "###"
+
+  mkdir -pv "$outputdir_name"
+  # dry run
+  # cd "$outputdir_name" && wget --spider -r -l1 -H -t1 -nd -N -np -A "$1" -erobots=off "$http_name"
+  cd "$outputdir_name" && wget -r -l1 -H -t1 -nd -N -np -A "$1" -erobots=off "$http_name"
+  rename 's/\ /_/g' *mp3
+  cd ..
+}
+
+function webcam-list() {
+    v4l2-ctl --list-formats-ext && v4l2-ctl --list-devices ;
+}
+
+function webcam-mplayer() { mplayer tv:// -tv driver=v4l2:width=640:height=360:device=­/dev/video0
+    -fps 30 -vf screenshot -ontop -geometry "99%:95%" ;}
+
+function w3mimg () {
+    w3m -o imgdisplay=/usr/lib/w3m/w3mimgdisplay $1
+}
+
+function xfig_old() {
+    /usr/bin/xfig -exportLanguage ps -paper_size Letter -inches -cbg grey96 "$1"
+}
+
+# no video, music/audio only
+function youtube-listen() {
+    youtube-viewer -n "$@"
+}
+
+# -----------------------suspend and hibernate ---------------------------------------
+# function hibernate() {
+# dbus-send --system --print-reply --dest="org.freedesktop.UPower" /org/freedesktop/UPower org.freedesktop.UPower.Hibernate
+# }
+
+# function suspend() {
+# dbus-send --system --print-reply --dest="org.freedesktop.UPower" /org/freedesktop/UPower org.freedesktop.UPower.Suspend
+# }
+
+#{{{ ------ MPSYT-Youtube Channels ------------------------------------------------------
+# tutorial video: https://www.youtube.com/watch?v=VE2iCBkIs8E
+function mpsyt-top100songs() { mpsyt pl PLx0sYbCqOb8TBPRdmBHs5Iftvv9TPboYG ;}
+function mpsyt-movie-flicksandthecity() { mpsyt user UCS5C4dC1Vc3EzgeDO-Wu3Mg ;}
+function mpsyt-collider() { mpsyt user ColliderVideos ;}
+function mpsyt-collider-movietalk() { mpsyt pl "https://www.youtube.com/playlist?list=PLayt6616lBcmbuEa2cRW7Xe4_NrnVrxXn" ;}
+function mpsyt-collider-tvtalk() { mpsyt pl "https://www.youtube.com/playlist?list=PLayt6616lBcnTXiFU58Zqf3Ot8zwY32a7" ;}
+function mpsyt-cpp() { mpsyt pl "https://www.youtube.com/playlist?list=PLlrATfBNZ98dudnM48yfGUldqGD0S4FFb" ;}
+function mpsyt-openmp() { mpsyt pl "https://www.youtube.com/playlist?list=PLLX-Q6B8xqZ8n8bwjGdzBJ25X2utwnoEG" ;}
+# }}}
+
+#-------- Youtube-Viewer Channels {{{
+# tutorial video: http://www.youtube.com/watch?v=FnJ67oAxVQ4
+# watch/login/comment/search/download...etc video on youtube, all from cli
+# https://github.com/trizen/youtube-viewer
+function yt-listen() { youtube-viewer -n $@ ;}	# no video, music/audio only
+function yt-music() { youtube-viewer -n --category=Music --top ;}	# show top music list
+function yts-movie-movieclipstrailer() { youtube-viewer -u UCi8e0iOVk1fEOogdfu4YgfA ;}
+function yts-afterbuzz-gameofthrones() { youtube-viewer -p PL0404DAD1AD037666 ;}
+function yts-scooby1961() { youtube-viewer -u scooby1961 ;}
+# }}}
+
+# {{{-------- NVLC Podcast RSS
+# DEMO: https://www.youtube.com/watch?v=7y_58wpHuFE
+# DESC: play local and internet media using ncurses VLC
+function nvlc-player() { nvlc ${1:-cdda://} ;}		# other cdrom; cdda:///dev/cdrom ; cdda:///dev/sr0 ; cdda:///dev/sr1
+function nvlc-podcast() { nvlc -S podcast --podcast-urls "$@" ;}
+function podcast-movie-schmoesknow() { nvlc-podcast "http://feeds.feedburner.com/SchmoesKnowMoviesPodcast" ;}
+function podcast-movie-dcmovienews() { nvlc-podcast "http://popcorntalknetwork.com/category/shows/dc-movie-news-podcast/feed/" ;}
+# }}}
+
+#{{{ -------- Convert to Audio
+# REFF: https://trac.ffmpeg.org/wiki/Encode/MP3
+#       https://trac.ffmpeg.org/wiki/Encode/AAC
+#       https://trac.ffmpeg.org/wiki/TheoraVorbisEncodingGuide
+
+function convert-to-audio-mp3() {
+  if [ $# -lt 1 ]; then
+    echo -e "Usage: $0 <filename>"
+    echo -e "\nExample:\n$0 file.m4a"
+    echo -e "$0 file1.m4a file2.m4a file3.m4a"
+    echo -e "$0 *.m4a"
+    return 1
+  fi
+  myArray=( "$@" )
+  for arg in "${myArray[@]}"; do
+    while [ ! -f "${arg%.*}".mp3 ]
+    do
+      ffmpeg -i "$arg" -codec:a libmp3lame -qscale:a 2 "${arg%.*}".mp3
+    done
+  done
+}
+# }}}
+
+#-------- Calibre CLI v3 [last updated July 29, 2016] {{{
+# DEMO: http://www.youtube.com/watch?v=FeoVsC4U_0A
+# LINK: http://manual.calibre-ebook.com/cli/calibredb.html
+# DESC: ebook manager supports many formats and devices; interfaces with cli, webui, gui
+
+# define your library path
+
+cbbook=/home/mp466/Calibre\ Library
+cbcomic=/home/mp466/Calibre\ Library
+cbdojinshi=/home/mp466/Calibre\ Library
+cbsuper=/home/mp466/Calibre\ Library
+
+function cmx-list() {
+  if [ $# -lt 1 ]; then
+    echo -e "calibredb list files within a library"
+    echo -e "\nUsage:\n$0 <library>"
+    echo -e "\nExample:\n$0 \$cbcomic\n"
+    return 1
+  fi
+  calibredb list -f authors,title,tags,rating --library-path "$1"
+}
+
+function cmx-search() {
+  if [ $# -lt 2 ]; then
+    echo -e "calibredb search files within a library"
+    echo -e "\nUsage:\n$0 <library> <keywords>"
+    echo -e "\nExample:\n$0 \$cbcomic marvel"
+    echo -e "$0 \$cbcomic 'the walking dead'\n"
+    return 1
+  fi
+  calibredb list -s "${@:2}" -f authors,title,tags,rating --library-path "$1"
+}
+
+function cmx-add() {
+  if [ $# -lt 2 ]; then
+    echo -e "calibredb add new files to a library"
+    echo -e "\nUsage:\n$0 <library> <file>"
+    echo -e "\nExample:\n$0 \$cbcomic file.cbz"
+    echo -e "$0 \$cbcomic file1.cbz file2.cbz"
+    echo -e "$0 \$cbcomic file.epub file2.pdf file3.cbr\n"
+    return 1
+  fi
+  calibredb add "${@:2}" --library-path "$1"
+}
+
+function cmx-remove() {
+  if [ $# -lt 2 ]; then
+    echo -e "calibredb remove files from a library"
+    echo -e "\nUsage:\n$0 <library> <id>"
+    echo -e "$0 <library> <range>"
+    echo -e "\nExample:\n$0 \$cbcomic 100"
+    echo -e "$0 \$cbcomic 50-55"
+    echo -e "$0 \$cbcomic 100,120-127"
+    return 1
+  fi
+  calibredb remove "${@:2}" --library-path "$1"
+}
+
+function cmx-show() {
+  if [ $# -lt 2 ]; then
+    echo -e "calibredb show file metadata from a library"
+    echo -e "\nUsage:\n$0 <library> <id>"
+    echo -e "\nExample:\n$0 \$cbcomic 16"
+    return 1
+  fi
+  calibredb show_metadata "${@:2}" --library-path "$1" | html2text
+}
+
+# DESC: Calibre WebUI content server (open brower to http://192.168.1.xxx:port )
+# LINK: http://manual.calibre-ebook.com/cli/calibre-server.html
+function cmx-server() {
+  MY_IP=$(ip addr | awk '/global/ {print $1,$2}' | cut -d\/ -f1 | cut -d' ' -f2)
+  echo "${Green}>>>Calibre server http://$MY_IP:57770 for Books ${Color_Off}"
+  calibre-server -p 57770 --daemonize --with-library "$cbbook"
+  echo "${Green}>>>Calibre server http://$MY_IP:57771 for Comicbooks ${Color_Off}"
+  calibre-server -p 57771 --daemonize --with-library "$cbcomic"
+  echo "${Green}>>>Calibre server http://$MY_IP:57772 for Dojinshi ${Color_Off}"
+  calibre-server -p 57772 --daemonize --with-library "$cbdojinshi"
+  echo "${Green}>>>Calibre server http://$MY_IP:57773 for Super ${Color_Off}"
+  calibre-server -p 57773 --daemonize --with-library "$cbsuper"
+}
+function cmx-quit() { kill $(ps -ef | grep -i '[C]alibre-server' | awk '{print $2}') ;}
+function cmx-recipes() { ebook-convert --list-recipes | less ;}
+#}}}
+
+#{{{ -------- Concatenate Files --------------------------------------
+
+# tutorial video: http://www.youtube.com/watch?v=eQoOk5Xbt3M
+function concat-document-pdf() {
+  if [ $# -lt 1 ]; then
+    echo -e "concatenate multiple pdf files into one single pdf"
+    echo -e "Usage: $0 <filename>"
+    echo -e "\nExample:\n$0 file1.pdf file2.pdf file3.pdf"
+    echo -e "$0 *.pdf"
+    echo -e "\nDependency: ghostscript"
+    return 1
+  fi
+  gs -dBATCH -dNOPAUSE -sDEVICE=pdfwrite -sOutputFile="${1%.*}"-`date +'%F_%Hh%Ms%S'`_concat.pdf -f "$@"
+}
+
+function split-document-pdf() {
+  if [ $# -lt 3 ]; then
+    echo -e "split pdf page range into one single pdf"
+    echo -e "Usage: $0 <startpage> <endpage> <filename>"
+    echo -e "\nExample:\n$0 2 7 file.pdf"
+    echo -e "\nDependency: ghostscript"
+    return 1
+  fi
+  gs -sDEVICE=pdfwrite -q -dNOPAUSE -dBATCH -sOutputFile="${3%.*}"_split_pages_"$1"_to_"$2".pdf -dFirstPage="$1" -dLastPage="$2" "$3"
+}
+
+function concat-image-png() {
+  if [ $# -lt 1 ]; then
+    echo -e "concatenate multiple images into one single png"
+    echo -e "Usage: $0 <filename>"
+    echo -e "\nExample:\n$0 file1.jpg file2.png file3.jpeg"
+    echo -e "$0 *.jpg"
+    echo -e "$0 *.png"
+    return 1
+  fi
+  convert -append "$@" "${1%.*}"_concat.png
+}
+
+function concat-image-jpg() {
+  if [ $# -lt 1 ]; then
+    echo -e "concatenate multiple images into one single jpg"
+    echo -e "Usage: $0 <filename>"
+    echo -e "\nExample:\n$0 file1.jpg file2.png file3.jpeg"
+    echo -e "$0 *.jpg"
+    echo -e "$0 *.png"
+    return 1
+  fi
+  convert -append "$@" "${1%.*}"_concat.jpg
+}
+# }}}
+
+#{{{ ------- Surfraw Bookmarks ------------------------------------------------------
+# surfraw completions testing
+# https://blogs.oracle.com/AlejandroVargas/entry/awk_examples
+# removes empty line, removes comments, prints 1st word, sort abc ordered
+
+function showbookmarks() { awk 'NF != 0 && !/#/ {print $1}' ~/.config/surfraw/bookmarks | sort -n ;}
+#}}}
+
+
+function date-global() {
+# use tzselect to find timezone listing
+    local SHOWTIMEZONE="$(
+    alias date='date +"%a %D %l:%M %p"'
+    echo "Current Location:" "$(date)"
+    echo "USA LosAngeles:" "$(TZ='America/Los_Angeles' date)"
+    echo "Canada Alberta:" "$(TZ='America/Edmonton' date)"
+    echo "USA NewYork:" "$(TZ='America/New_York' date)"
+    echo "EU London:" "$(TZ='Europe/London' date)"
+    echo "EU Berlin:" "$(TZ='Europe/Berlin' date)"
+    echo "Bangladesh Dhaka:" "$(TZ='Asia/Dhaka' date)"
+    echo "China Xinjiang:" "$(TZ='Asia/Urumqi' date)"
+    echo "Vietnam Saigon:" "$(TZ='Asia/Ho_Chi_Minh' date)"
+    echo "China Beijing:" "$(TZ='Asia/Shanghai' date)"
+    echo "HK HongKong:" "$(TZ='Asia/Hong_Kong' date)"
+    echo "Japan Tokyo:" "$(TZ='Asia/Tokyo' date)"
+    )"
+    echo "$SHOWTIMEZONE" | column -t
+}
+
+#-------- Folder Jumplist {{{
+# go, gs
+
+# ls recent items at bottom with green TODAY yellow YESTERDAY substituted with file permission also
+# https://www.reddit.com/r/archlinux/comments/41s1w4/what_is_your_favorite_one_liner_to_use/cz50y1m
+# http://askubuntu.com/a/152005
+function lst() {
+  ls -vAFqh --color=yes -got --time-style=long-iso "$@" \
+  | sed "s/$(date +%Y-%m-%d)/\x1b[32m     TODAY\x1b[m/;s/$(date +'%Y-%m-%d' -d yesterday)/\x1b[33m YESTERDAY\x1b[m/" \
+  | awk '{k=0;for(i=0;i<=8;i++)k+=((substr($1,i+2,1)~/[rwx]/)*2^(8-i));if(k)printf(" %0o ",k);print}' | tac
+}
+
+function lsl() {
+  ls -hl --color=yes "$@" \
+  | awk '{k=0;for(i=0;i<=8;i++)k+=((substr($1,i+2,1)~/[rwx]/)*2^(8-i));if(k)printf(" %0o ",k);print}'
+}
+
+function gh() { cd ~ && lst ;}
+function gm() { cd /media && lst ;}
+function gM() { cd ~/Music && lst ;}
+function gD() { cd ~/Documents && lst ;}
+function gd() { cd ~/Downloads && lst ;}
+function gp() { cd ~/Pictures && lst ;}
+function gw() { cd ~/Pictures/Wallpapers && lst ;}
+
+function redshift-status() {
+  # check if process is running ( 0 = off, 1 = on )
+  STATUS="$(ps -ef | grep '[r]edshift' | wc -l)"
+  # if off then turn on
+  if [[ "${STATUS}" == 1 ]]; then
+    notify-send -t 1 --icon=info "RedShift" "On"
+    redshift >/dev/null 2>&1 & disown
+  # if on then turn off
+  elif [[ "${STATUS}" == 2 ]]; then
+    notify-send -t 1 --icon=info "RedShift" "Off"
+    redshift -x && killall redshift
+  fi
+}
+
+# }}}
+
+# {{{ ----------------------------------fzf---------------------------------------------
+# use fzf to move things into clipboard
+# env | fzf-tmux | cut -d= -f2 | xsel -i
+
+function rofi-fzf() {
+    $(declare -f | awk '/fzf-/ {print $1}' | grep -i fzf | fzf -e -i) ;}
+
+# start fuzzy finder frontend to greenclip
+function fzf-clipboard() {
+    echo -n "$(greenclip print | fzf -e -i)" | xclip -selection clipboard ;}
+
+# greenclip configuration settings
+function cfg-greenclip() { killall greenclip ; $EDITOR ~/.config/greenclip.cfg && nohup greenclip daemon > /dev/null 2>&1 & }
+
+# greenclip reload
+function rld-greenclip() { killall greenclip ; nohup greenclip daemon > /dev/null 2>&1 & }
+
+# greenclip clear history
+function derez-greenclip() { killall greenclip ; rm ~/.cache/greenclip.history && nohup greenclip daemon > /dev/null 2>&1 & }
+
+function fzf-bookmarkscli() {
+    sr "$(cat ~/.config/surfraw/bookmarks | sed '/^$/d' | sed '/^#/d' | sed '/^\//d' | sort -n | fzf -e -i )" ;}
+
+function fzf-bookmarks() {
+    surfraw "$(cat ~/.config/surfraw/bookmarks | sed '/^$/d' | sed '/^#/d' | sed '/^\//d' | sort -n | fzf -e -i )" ;}
+
+function fzf-bookmarks2clipboard() {
+    echo -n "$(cat ~/.config/surfraw/bookmarks | sed '/^$/d' | sed '/^#/d' | sed '/^\//d' | sort -n | fzf -e -i )" | awk '{print $2}' | xclip -selection clipboard ;}
+
+function fzf-bookmarkstor() {
+    surfraw -browser=tor-browser-en "$(cat ~/.config/surfraw/bookmarks | sed '/^$/d' | sed '/^#/d' | sed '/^\//d' | sort -n | fzf -e -i )" ;}
+
+function fzf-tor() {
+    torify w3m "$(cat ~/.config/surfraw/bookmarks | awk 'NF != 0 && !/^#/ && /\.onion/' |fzf -e -i | awk '{print $2}')" ;}
+
+function fzf-launcher() {
+  # note: xdg-open has a bug with .desktop files, so we cant use that shit
+  selected="$(ls /usr/share/applications | fzf -e -i )"
+  nohup `grep '^Exec' "/usr/share/applications/$selected" | tail -1 | sed 's/^Exec=//' | sed 's/%.//'` >/dev/null 2>&1&
+  # disown if exit 0 successfully
+  if [[ $? = 0 ]] ; then disown; fi
+}
+
+# https://junegunn.kr/2015/04/browsing-chrome-history-with-fzf/
+# https://github.com/junegunn/fzf/wiki/examples#browsing-history
+function fzf-chromium_history() {
+  local cols sep
+  cols=$(( COLUMNS / 3 ))
+  sep='{::}'
+
+  # macos
+  # cp -f ~/Library/Application\ Support/Google/Chrome/Default/History /tmp/h
+  # linux
+  \cp -f ~/.config/chromium/Default/History /tmp/h
+
+  sqlite3 -separator $sep /tmp/h \
+    "select substr(title, 1, $cols), url
+     from urls order by last_visit_time desc" |
+  awk -F $sep '{printf "%-'$cols's  \x1b[36m%s\x1b[m\n", $1, $2}' |
+  fzf --ansi --multi | sed 's#.*\(https*://\)#\1#' | xargs xdg-open
+  # fzf --ansi --multi | sed 's#.*\(https*://\)#\1#' | xargs open
+}
+
+function fzf-locate() {
+  # xdg-open "$(locate "*" | fzf -e -i )"
+  # xdg-open "$(locate home media | fzf -e -i )" >/dev/null 2>&1 & disown
+  xdg-open "$(locate \
+    -d /var/lib/mlocate/mlocate.db \
+    home media \
+    | fzf -e -i )" >/dev/null 2>&1 & disown
+
+  # if cancle or fail then exit
+  # if [ $? -ne 0 ]
+  # then
+  #  	exit
+  # fi
+}
+
+# https://medium.com/adorableio/simple-note-taking-with-fzf-and-vim-2a647a39cfa
+# note  taking apps
+function fzf-notes() {
+  fzf --preview="cat {}" --preview-window=right:70%:wrap
+}
+
+#fd - cd to selected directory
+function fdirectory() {
+  DIR=$(find ./ -maxdepth 4 -type d -exec basename {} \; | fzf ) && cd $DIR || exit
+}
+
+# fe - Open the file with editor -Bypass fuzzy finder one match (--select-1) -Exit if no match (--exit-0)
+function feditor() {
+  local file
+  file=$(fzf --query="$1" --select-1 --exit-0)
+  [ -n "$file" ] && ${EDITOR:-vim} "$file"
+}
+
+# fh - repeat history - disable for profiling
+function fhist() {
+   history | fzf +s | sed 's/ *[0-9]* *//'
+}
+
+# fkill - kill process
+function fkill() {
+  pid=$(ps -ef | sed 1d | fzf -m | awk '{print $2}')
+
+  if [ "x$pid" != "x" ]
+  then
+    kill -"${1:-9}" "$pid"
+  fi
+}
+
+function fzfr() {
+    fzf -m -x | xargs -d'\n' -r "$@"
+}
+
+function fzf-surfraw() {
+    surfraw "$(cat ~/.config/surfraw/bookmarks | sed '/^$/d' | sort -n | fzf -e)"
+}
+
+function fzf-snippet() {
+    selected="$(cat ~/.snippetrc | sed '/^$/d' | sort -n | fzf -e -i )"
+    # remove tags, leading and trailing spaces, also no newline
+    echo "$selected" | sed -e s/\;\;\.\*\$// | sed 's/^[ \t]*//;s/[ \t]*$//' | tr -d '\n' | xclip -selection clipboard
+}
+
+function fzf-multisnippet() {
+    # location of snippets
+    dir=~/.multisnippet
+
+    # merge filename and tags into single line
+    results=$(for FILE in $dir/*
+    do
+          getname=$(basename "$FILE")
+          gettags=$(head -n 1 "$FILE")
+
+          echo "$getname \t $gettags"
+    done)
+
+    # copy content into clipboard without tags
+    filename=$(echo "$(echo $results | fzf -e -i )" | cut -d' ' -f 1)
+    sed 1d "$dir"/"$filename" | xclip -selection clipboard
+}
+#}}}
+
+function rga-fzf() {
+     RG_PREFIX="rga --files-with-matches"
+     local file
+     file="$(
+         FZF_DEFAULT_COMMAND="$RG_PREFIX '$1'" \
+         fzf --sort --preview="[[ ! -z {} ]] && rga --pretty --context 5 {q} {}" \
+         phony -q "$1" \
+          bind "change:reload:$RG_PREFIX {q}" \
+         preview-window="70%:wrap"
+     )" &&
+     echo "opening $file" &&
+     xdg-open "$file"
+}
+
+#{{{--------------------------------git functions------------------------------------
+function git-what-happened(){
+ref=${1:-"HEAD"}
+old=$ref@{1}
+new=$ref
+
+log() {
+git log --graph --pretty=short -1 "$1"
+}
+echo "Old revision:"
+log "$old"
+echo
+echo "New revision:"
+log "$new"
+echo
+echo "Changes:"
+git diff --stat --summary "$new" "$old"
+}
+
+function git-loglive(){
+
+while true;
+do
+   clear
+   git log \
+   --graph \
+   --all \
+   --color \
+   --date=short \
+   -10 \
+   --pretty=format:"%C(yellow)%h%x20%C(white)%cd%C(green)%d%C(reset)%x20%s%x20%C(bold)(%an)%Creset" |
+   cat -
+   sleep 15
+done
+}
+
+function git-treelive(){
+while true;
+ do
+    clear
+    date
+    tree
+    sleep 3
+ done
+}
+
+function git-create-empty-branch(){
+branch=$1
+
+function output_help {
+  echo "usage:   git-create-empty-branch ref"
+}
+
+if [[ $branch ]]; then
+  git symbolic-ref HEAD refs/heads/$branch
+  rm .git/index
+  git clean -fdx
+else
+  output_help
+fi
+}
+
+# create new branch from a default named branch modify the first line to make it an argument if desired
+function gnew() {
+ DEST_BRANCH=$2
+ : ${DEST_BRANCH:='master'}
+ git co $DEST_BRANCH
+ git pull
+ git co -b "$1"
+ # bundle install # If using Bundler (ruby)
+ # bundle exec rake db:migrate
+ git push -u
+}
+
+# Get the latest changes on master pulled down locally and then rebase them into/onto the current branch
+function grm() {
+  CURRENT=`git rev-parse --abbrev-ref HEAD` # figures out the current branch
+  git checkout master
+  git pull
+  git checkout $CURRENT
+  git rebase master
+}
+
+# Stash current, then update to latest, then pop the stash
+function gsrm() {
+  git stash
+  grm
+  git stash pop
+}
+
+function git-revert-single-file(){
+
+function output_help {
+    echo "usage: git-revert-single-file <sha1> <file>"
+}
+
+sha1=$1
+file=$2
+
+if [[ $sha1 ]]; then
+    git diff $sha1..$sha1^ -- $file | patch -p1
+else
+    output_help
+fi
+}
+
+function git-vee(){
+# This prepares a brief summary of how your current branch has diverged
+# from a corresponding remote branch.  A typical use is:
+#   git vee origin
+#
+# if the currently-checked-out branch is master, this will compare
+# master and origin/master.
+#
+# It uses git log --cherry-mark, so you need at least git 1.7.4.1.
+# If --cherry-mark doesn't work, delete that option from this script.
+#
+# Usage:
+#   git vee # compare current head branch and its remote tracking branch
+#   git vee remote  # compare current head branch and its analog on the remote
+#   git vee remote branch # compare branch and remote/branch
+#   git vee branch  # compare HEAD and branch
+#   git vee branch1 branch2 # compare branch1 and branch2
+DIE=false;
+
+equal_commits () {
+  [ $(git rev-parse $A) = $(git rev-parse $B) ]
+}
+valid_ref () {
+  git rev-parse -q --verify $1 >/dev/null
+}
+is_remote () {
+  git remote | grep -q "^$1"'$'
+}
+die_later () {
+  echo $* 1>&2;
+  DIE=true
+}
+die_now () {
+  $DIE && exit 1
+}
+die () {
+  echo 1>&2 "$@"
+  exit 1
+}
+usage () {
+  echo "Usage: $0 [remote] [branch]" 1>&2
+  echo "       $0 branch-a [branch-b]" 1>&2
+  exit 2
+}
+
+case $# in
+  0) Y=$(git get current-branch-name);
+     [ -z "$Y" ] && die "Couldn't get current branch name"
+     X=$(git get branch-remote $Y);
+     [ -z "$X" ] && die "Couldn't find remote tracking branch for '$Y'"
+     ;;
+  1) X=$1 Y=HEAD;;
+  2) X=$1 Y=$2;;
+  *) usage ;;
+esac
+
+if is_remote $X; then
+  if [ $Y = HEAD ]; then
+      Y=$(git get current-branch-name)
+  fi
+  A=$Y B="$X/$Y"
+else
+  A=$X; B=$Y;
+fi
+
+valid_ref $A || die_later "$A: unknown commit"
+valid_ref $B || die_later "$B: unknown commit"
+die_now
+
+if equal_commits "$A" "$B" ; then
+  echo "$A and $B are identical"
+  exit 0;
+fi
+git log --decorate --cherry-mark --oneline --graph --boundary $A"..."$B
+}
+
+function git-overwritten() {
+# Usage: git overwritten [--[no-]color] [<head=HEAD>] [<base=origin>]
+#
+# Aggregates git blame information about original owners of lines changed or
+# removed in the '<base>...<head>' diff.
+#
+# Each line of output represents a past commit, and consists of:
+# - number of lines from the commit that this diff affects
+# - commit date
+# - commit sha
+# - author name
+# - commit subject message
+#
+# The commits are listed in the reverse chronological order.
+
+#set -e
+
+unset colorize
+unset head
+unset base
+
+abort() {
+  "$0" --help | head -1 >&2
+  exit 1
+}
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+  --color ) colorize=1 ;;
+  --no-color ) colorize= ;;
+  -h | --help )
+    sed -ne '/^#/!q;s/.\{1,2\}//;1d;p' < "$0"
+    exit 0
+    ;;
+  -* | "") abort ;;
+  * )
+    if [ -z "$head" ]; then head="$1"
+    elif [ -z "$base" ]; then base="$1"
+    else abort
+    fi
+    ;;
+  esac
+  shift 1
+done
+
+head="${head:-HEAD}"
+base="${base:-origin}"
+
+[ -t 1 ] && colorize="${colorize-1}"
+
+color() {
+  if [ -n "$colorize" ]; then
+    printf "\e[0;%dm%s\e[m" "$1" "$2"
+  else
+    echo -n "$2"
+  fi
+}
+
+git diff "${base}...${head}" --diff-filter=DM --no-prefix -w -U0 | grep -v '^+' | awk '
+  function print_range() {
+    printf "-L %d,%d -- %s\n", start, stop, file
+  }
+  /^--- / {
+    sub(/^--- /, "")
+    file = $0
+    next
+  }
+  /^-/ {
+    if (!start) start = stop = diffstart
+    else stop += 1
+    next
+  }
+  start {
+    print_range()
+    start = 0
+  }
+  /^@@ / {
+    sub(/^-/, "", $2)
+    diffstart = int($2)
+    start = 0
+  }
+  END {
+    if (start) print_range()
+  }
+' | xargs -L1 git blame --line-porcelain "$base" | awk -v OFS=$'\t' '
+  BEGIN { num_lines = name_length = 0 }
+  function val() { sub(/^[a-z-]+ /, ""); return $0 }
+  /^[0-9a-f]{40} / { sha = $1 }
+  /^author / {
+    author = val()
+    len = length(author)
+    if (len > name_length) name_length = len
+  }
+  /^committer-time / { time = val() }
+  /^summary / { msg = val() }
+  /^\t/ {
+    print time, sha, author, msg
+    num_lines += 1
+  }
+  END { print num_lines, name_length }
+' | sort -n | {
+  read -r num_lines name_length
+  if [ "$num_lines" -eq 0 ]; then
+    color 31 "Warning: " >&2
+    echo "no changed/removed lines found in the $base...$head diff" >&2
+  fi
+
+  while IFS=$'\t' read time sha author msg; do
+    date -r $time "+%Y-%m-%d" | tr -d $'\n'
+    printf ' '
+    color 33 "${sha:0:7}"
+    printf '  '
+    color 32 "$(printf "%${name_length}s" "$author")"
+    printf ': '
+    echo "$msg"
+  done
+} | sort -r | uniq -c
+}
+#}}}
+
+#{{{-------- Smartctl - Check Hard Drive Health (last update March 27, 2017)
+# S.M.A.R.T. is the abbreviation for "Self Monitoring And Reporting Technology"
+# It is a standard interface protocol and set of the disk features that allows disk to check its status and report it to a host system
+# references:
+# https://www.smartmontools.org/browser/trunk/smartmontools/smartctl.8.in
+# https://en.wikipedia.org/wiki/S.M.A.R.T.#ATA_S.M.A.R.T._attributes
+# http://www.z-a-recovery.com/manual/smart.aspx
+# https://ddumont.wordpress.com/2010/03/15/workaround-for-aborted-smart-test-for-seagate-disk/
+
+function smartctl-conveyancetest() {
+  if [ $# -lt 1 ]; then
+    echo -e "perform conveyance test to check hard drive health (usually 5mins)"
+    echo -e "not all drives has this testing feature"
+    echo -e "\nUsage: $0 <device>"
+    echo -e "Example: $0 sdx"
+    return 1
+  fi
+  sudo smartctl -t conveyance /dev/"$1"
+}
+
+function smartctl-extendedtest() {
+  if [ $# -lt 1 ]; then
+    echo -e "perform long extended test to check hard drive health (usually 1hr+)"
+    echo -e "\nUsage: $0 <device>"
+    echo -e "Example: $0 sdx"
+    return 1
+  fi
+  sudo smartctl -t long /dev/"$1"
+}
+
+function smartctl-shorttest() {
+  if [ $# -lt 1 ]; then
+    echo -e "perform short test to check hard drive health (usually 2mins)"
+    echo -e "\nUsage: $0 <device>"
+    echo -e "Example: $0 sdx"
+    return 1
+  fi
+  sudo smartctl -t short /dev/"$1"
+}
+
+function smartctl-showprogress() {
+  if [ $# -lt 1 ]; then
+    echo -e "show the progress of your smartctl self test"
+    echo -e "\nUsage: $0 <device>"
+    echo -e "Example: $0 sdx"
+    return 1
+  fi
+  sudo watch -n 10 "smartctl -l selftest /dev/$1 ; smartctl -c /dev/$1 | head -11 | tail -3"
+}
+
+function smartctl-cancletest() {
+  if [ $# -lt 1 ]; then
+    echo -e "cancle a self test (short, conveyance, extended)"
+    echo -e "\nUsage: $0 <device>"
+    echo -e "Example: $0 sdx"
+    return 1
+  fi
+  sudo smartctl -X /dev/"$1"
+}
+
+function smartctl-enablesmart() {
+  if [ $# -lt 1 ]; then
+    echo -e "enable SMART on your hard drive"
+    echo -e "\nUsage: $0 <device>"
+    echo -e "Example: $0 sdx"
+    return 1
+  fi
+  sudo smartctl -s on /dev/"$1"
+}
+
+function smartctl-disablesmart() {
+  if [ $# -lt 1 ]; then
+    echo -e "disable SMART on your hard drive"
+    echo -e "\nUsage: $0 <device>"
+    echo -e "Example: $0 sdx"
+    return 1
+  fi
+  sudo smartctl -s off /dev/"$1"
+}
+
+function smartctl-keepalive() {
+  if [ $# -lt 1 ]; then
+    echo -e "Keep hard drive from going to sleep by creating a file every 60 seconds."
+    echo -e 'Some external hard drive like Seagate will auto sleep on idle, thus we will get a "Aborted by host" in our self-test logs'
+    echo -e "references: https://ddumont.wordpress.com/2010/03/15/workaround-for-aborted-smart-test-for-seagate-disk/"
+    echo -e "\nUsage: $0 <path>"
+    echo -e "Example: $0 ."
+    echo -e "         cd /mnt/myseagatehdd && $0 ."
+    return 1
+  fi
+  while true ; do echo "foo" >> test.txt; sleep 60; done
+}
+
+function smartctl-info() {
+  if [ $# -lt 1 ]; then
+    echo -e 'Show S.M.A.R.T information of a device'
+    echo -e "\nUsage: $0 <device>"
+    echo -e "Example: $0 sdx"
+    return 1
+  fi
+  sudo smartctl -a /dev/"$1" | grep -i --color='always' -E 'WARNING|Model Family|Device Model|SMART support is|User Capacity|SMART overall-health self-assessment test result|-fail|Short self-test routine|Extended self-test routine|Conveyance self-test routine|SMART Attributes Data Structure|Power_On_Hours|SMART Self-test log structure|ATA Error Count|FAILING_NOW|$'
+
+  echo "${Red}=============References=================${Color_Off}"
+  echo "${Yellow}>>>ATTRIBUTE_NAME meaning: https://en.wikipedia.org/wiki/S.M.A.R.T.#ATA_S.M.A.R.T._attributes ${Color_Off}"
+  echo "${Blue}>>>aborted by host (HDD sleep on idle): https://ddumont.wordpress.com/2010/03/15/workaround-for-aborted-smart-test-for-seagate-disk/ ${Color_Off}"
+  echo "${Green}>>>Manpage: If the Normalized value (VALUE) is less than or equal to the Threshold value (THRESH), then the Attribute is said to have failed. If the Attribute is a pre-failure Attribute, then disk failure is imminent. ${Color_Off}"
+  echo "${Green}>>>Please note: the fact that an Attribute is of type 'Pre-fail' does not mean that your disk is about to fail!${Color_Off}"
+  echo "${Green}>>>If the Attribute's current Normalized value is less than or equal to the threshold value, then the "WHEN_FAILED" column will display FAILING_NOW.${Color_Off}"
+  echo "${Purple}=====HDD Hours=====${Color_Off}"
+  echo "1000  hrs = 41 days"
+  echo "8760  hrs = 1 year  (365  days)"
+  echo "17520 hrs = 2 years (730  days)"
+  echo "26280 hrs = 3 years (1095 days)"
+  echo "35040 hrs = 4 years (1460 days)"
+  echo "43800 hrs = 5 years (1825 days)"
+  echo "52560 hrs = 6 years (2190 days)"
+}
+#}}}
+
+#{{{---------------------------------------cfg------------------------------------------
+function cfg-bashrc() { $EDITOR ~/.bashrc ;}
+function cfg-bash-alias() { $EDITOR ~/.bash_alias ;}
+function cfg-bash-functions() { $EDITOR ~/.bash_functions ;}
+function cfg-kpcli() { kpcli ~/.vim/private/.password_database.kdbx ;}
+function cfg-chromium-devtoolsize() { $EDITOR ~/.config/chromium/Default/User\ StyleSheets/Custom.css ;}
+function cfg-dotfile-changes() { $EDITOR ~/.vim/vimwiki/dotfile_changes.md;}
+function cfg-dotfile-script() { $EDITOR ~/.vim/scripts/dotfiles.sh ;}
+function cfg-dircolors() { $EDITOR ~/.dircolors ;}
+#function cfg-flexget() { $EDITOR ~/.flexget/config.yml ;}
+function cfg-fstab() { sudo "$EDITOR" /etc/fstab ;}
+function cfg-gitconf() { $EDITOR ~/.gitconfig ;}
+function cfg-gitupdate() { $EDITOR ~/.vim/scripts/gitupdate.sh ;}
+function cfg-group() { sudo "$EDITOR" /etc/group ;}
+function cfg-hosts() { sudo "$EDITOR" /etc/hosts ;}
+function cfg-i3config() { $EDITOR ~/.i3/config ;}
+function cfg-inputrc() { $EDITOR ~/.inputrc ;}
+#function cfg-livestreamer() { $EDITOR ~/.livestreamerrc ;}
+#function cfg-mpd() { $EDITOR ~/.mpd/mpd.conf ;}
+function cfg-mplayer() { $EDITOR ~/.mplayer/config ;}
+function cfg-snippetrc() { $EDITOR ~/.snippetrc ;}
+#function cfg-multisnippetrc() { $EDITOR ~/.multisnippet/"$(ls ~/.multisnippet | fzf -e -i)" ;}
+#function cfg-ncmpcpp() { $EDITOR ~/.ncmpcpp/config ;}
+function cfg-newsboat() { $EDITOR ~/.config/newsboat/config ;}
+function cfg-newsboat-queue() { $EDITOR ~/.config/newsboat/queue ;}
+function cfg-newsboat-urls() { $EDITOR ~/.config/newsboat/urls ;}
+function cfg-newsboat-urls-podcasts() { $EDITOR ~/.config/newsboat/podcast.urls ;}
+function cfg-newsboat-urls-linux() { $EDITOR ~/.config/newsboat/linux.urls ;}
+function cfg-ranger-conf() { $EDITOR ~/.config/ranger/rc.conf ;}
+function cfg-ranger-rifle() { $EDITOR ~/.config/ranger/rifle.conf ;} # edit open_with extensions
+function cfg-ranger-commands() { $EDITOR ~/.config/ranger/commands.py ;} # scripts
+function cfg-sourcelist() { sudo "$EDITOR" /etc/apt/sources.list ;}
+function cfg-ssh-client() { sudo "$EDITOR" /etc/ssh/ssh_config ;}
+function cfg-ssh-daemon() { sudo "$EDITOR" /etc/ssh/sshd_config ;}
+function cfg-sudoers() { sudo "$EDITOR" /etc/sudoers ;}
+function cfg-surfraw-bookmarks() { $EDITOR ~/.config/surfraw/bookmarks ;}
+function cfg-surfraw-conf() { $EDITOR ~/.config/surfraw/conf ;}
+function cfg-system_changes() { $EDITOR ~/.vim/vimwiki/system_changes.md ;}
+function cfg-tmuxrc() { $EDITOR ~/.tmux.conf ;}
+#function cfg-transmission-daemon() { $EDITOR ~/.config/transmission-daemon/settings.json ;}
+#function cfg-transmission-ncurse() { $EDITOR ~/.config/transmission-remote-cli/settings.cfg ;}
+function cfg-turses() { $EDITOR ~/.turses/config ;}
+function cfg-urlview() { $EDITOR ~/.urlview ;}
+function cfg-updatedb() { sudo "$EDITOR" /etc/updatedb.conf ;}
+function cfg-update() { $EDITOR ~/.vim/update.yaml ;}
+function cfg-vimrc() { $EDITOR ~/.vimrc ;}
+function cfg-vim-ab() { $EDITOR ~/.vim/startup/ab.vim ;}
+function cfg-vim-commands() { $EDITOR ~/.vim/startup/commands.vim ;}
+function cfg-vim-mappings() { $EDITOR ~/.vim/startup/mappings.vim ;}
+function cfg-vim-settings() { $EDITOR ~/.vim/startup/settings.vim ;}
+function cfg-vlcrc() { $EDITOR ~/.config/vlc/vlcrc ;}
+function cfg-w3m-config() { $EDITOR ~/.w3m/config ;}
+function cfg-w3m-keymap() { $EDITOR ~/.w3m/keymap ;}
+function cfg-xdefaults() { $EDITOR ~/.Xdefaults ;}
+function cfg-xinitrc() { $EDITOR ~/.xinitrc ;}
+function cfg-xmodmap() { $EDITOR ~/.Xmodmap ;}
+function cfg-xresources() { $EDITOR ~/.Xresources ;}
+# }}}
+
+#{{{-------- configurations reload --------------------------------------------------------------
+function rld-bashrc() { source ~/.bashrc ;}
+function rld-font() { fc-cache -v -f ;}
+function rld-grub() { sudo grub-mkconfig -o /boot/grub/grub.cfg ;}
+function rld-greenclip() { killall greenclip ; nohup greenclip daemon > /dev/null 2>&1 & }
+function rld-keynav() { killall keynav ; keynav daemonize ;}
+function rld-updatedb() { sudo updatedb ;}
+function rld-xbindkeys() { killall xbindkeys ; xbindkeys ;}
+function rld-hyperkey() { xmodmap ~/.Xmodmap; killall xcape ; xcape -e 'Hyper_L=Return' ; killall xbindkeys ; xbindkeys ;}
+function rld-xcape() { killall xcape ; xcape -e 'Hyper_L=Return' ;}
+function rld-xdefaults() { xrdb ~/.Xdefaults ;}
+function rld-xmodmap() { xmodmap ~/.Xmodmap ;}
+function rld-xmodmap-uskeyboardlayout() { setxkbmap -layout us ;}
+function rld-xresources() { xrdb -load ~/.Xresources ;}
+# }}}
+
+#{{{------------------------------Dpkg--------------------------------------------
+function dp-installed(){ dpkg --get-selections | awk "{print$1}";}      #to install
+function dp-show(){ dpkg --info;}                                       #to examine archive files
+function dp-content(){ dpkg --contents;}                                #to list their contents.
+function dp-whichpkg(){ dpkg -S "$( which "$1" )";}                         #lookup for what package uses this command
+function dp-history-install(){ cat /var/log/dpkg.log | grep install ; }
+function dp-history-rollback() { cat /var/log/dpkg.log | grep upgrade | grep "$2" -A10000000 | grep "$3" -B10000000 |awk '{print $4"="$5}';}
+# }}}
+
+#{{{------------------------------ cheat----------------------------------------------
+function cheat-tools() { $EDITOR ~/.vim/vimwiki/tools_and_materials.md ;}
+function cheat-books() { $EDITOR ~/.vim/vimwiki/books.md ;}
+function cheat-recipes() { $EDITOR ~/.vim/vimwiki/recipes.md ;}
+function cheat-commands() { $EDITOR ~/.vim/vimwiki/commands.md ;}
+function cheat-bash() { $EDITOR ~/.vim/bashcheatcheet.md ;}
+function cheat-bash-private() { $EDITOR ~/.vim/bash_private.md ;}
+function cheat-git() { $EDITOR  ~/.vim/git_cheatsheet.md ;}
+function cheat-jeptoadd() { $EDITOR ~/Jeopardy/notes/toadd.md ;}
+function cheat-jeppaper() { $EDITOR ~/Jeopardy/paper/source/manual/questions.rst ;}
+function cheat-julia() { $EDITOR ~/.vim/juliacheatsheet.md ;}
+function cheat-programmingcheatsheet() { $EDITOR ~/programmingbook/programmingcheatsheet.md ;}
+function cheat-python() { $EDITOR ~/.vim/pythoncheatsheet.md ;}
+function cheat-python-intermediate() { $EDITOR ~/.vim/pythoncheatsheet_intermediate.md ;}
+function cheat-todo() { $EDITOR ~/.vim/.todo_private.md ;}
+function cheat-tmux() { $EDITOR ~/.vim/tmuxcheatsheet.md ;}
+function cheat-vim() { $EDITOR ~/.vim/vimcheatsheet.md ;}
+function cheat-vocab() { $EDITOR ~/.vim/vimwiki/vocab.md ;}
+# }}}
+
+# {{{------------------------hints---------------------------------------------------
+
+function hint-un() {
+cat <<EOF
+mnemonic:
+Let’s Help The World’s People Become All Better
+
+Trygve Lie (Norway, 1946) – resigned in 1952 under pressure from the Soviet Union.
+Dag Hammarskjöld (Sweden, 1953) – killed in a plane crash in Northern Rhodesia, 1961.
+U Thant (Burma, 1961) – at 10 years, 1 month, the longest-serving Secretary-General.
+Kurt Waldheim (Austria, 1972) – China vetoed his third term; it later came out that he was a suspected war criminal.
+Javier Pérez de Cuéllar (Peru, 1982) – compromise candidate; Retired after two terms.
+Boutros Boutros-Ghali (Egypt, 1992) – United States vetoed his second term.
+Kofi Annan (Ghana, 1997) – in 2012, served as U.N. special representative to Syria
+Ban Ki-moon (South Korea, 2007)
+António Guterres - a Portuguese politician
+EOF
+}
+
+function hint-jep-moons() {
+cat <<EOF
+Mercury:  no moons
+Venus:    no moons
+Earth:     1 moon
+Mars:      2 moons, Phobos, Deimos
+Jupiter:  67 moons. The most famous are the Galilean moons, Io, Europa, Ganymede and Callisto.
+Saturn:   62 moons. The most famous, by far, is Titan, which is significantly more massive than any other Saturnian moon.
+Uranus:   27 moons, named after characters in the works of Shakespeare and Pope. Titania, Oberon, Miranda, Ariel, Umbriel
+Neptune:  14 moons, the most massive by far being Triton.
+Pluto:     5 moons, Charon, Nix, Hydra, Kerberos, Styx
+While Pluto, Eris, Haumea, Orcus and Quaoar are considered dwarf planets, they nevertheless have moons.
+EOF
+}
+
+function hint-apt() {
+cat <<EOF
+dpkg -S /bin/ls
+apt-file find kwallet.h
+apt-cache search "Apache HTTP Server"
+apt-cache show apache2
+apt-cache showpkg apache2
+apt-file list apache2
+apt-cache depends apache2
+apt-get purge apache2
+apt-get remove apache2
+apt-history install
+apt-history remove
+http://www.thegeekstuff.com/2009/10/debian-ubuntu-install-upgrade-remove-packages-using-apt-get-apt-cache-apt-file-dpkg/
+EOF
+}
+
+function hint-bash-dollarsign() {
+cat <<EOF
+http://linuxsig.org/files/bash_scripting.html
+\$#   Stores the number of command-line arguments that were passed to the shell program.
+\$_   Stores the last input
+\$?   Stores the exit value of the last command that was executed.
+\$0   Stores the first word of the entered command (the name of the shell program).
+\$*   Stores all the arguments that were entered on the command line ($1 $2 ...).
+"\$@"   Stores all the arguments that were entered on the command line, individually quoted ("\$1" "\$2" ...).
+EOF
+}
+
+function hint-bash-wordmodifiers() {
+cat <<EOF
+Word Modifiers in bash
+h - Remove a trailing file name component, leaving only the head.
+t - Remove all leading file name components, leaving the tail.
+r - Remove a trailing suffix of the form .xxx, leaving the basename.
+e - Remove all but the trailing suffix.
+$ touch blah/de/blah/blah.xml
+$ rm blah/de/blah/blah.xml
+$ ls -alh !$:h
+$ echo "no typozs"
+$ ^z^Mike
+$ cp filename{,-old}
+$ cp filename{-old,}
+EOF
+}
+
+function hint-capitals() {
+cat <<EOF
+Dushanbe - Tajikistan
+Ashgabat - Turkmenistan
+Tashkent - Uzbekistan
+Astana - Kazakhstan
+Bishkek - Kyrgyzstan
+Manama - Bahrain
+Thimphu - Bhutan
+Skopje - Macedonia
+Vientiane - Laos
+Asmara - Eritrea
+Nusantara - Indonesia
+EOF
+}
+
+function hint-cmus() {
+cat <<EOF
+add /home/username/music/albums, and press enter
+https://github.com/cmus/cmus/blob/master/Doc/cmus.txt
+c - Play or pause the currently playing track.
+n - Next track.
+b - Previous track.
+s - Stop the current track.
+p - Pause the playback.
+space - Skip to the next song in a playlist (if playing from a list).
+Ctrl + space - Toggle volume.
+m - Mute the sound.
+a - Adjust the volume up or down.
+j and k - Move the playback position forward or backward, respectively.
+c - - Decrease the volume (by a small amount).
+c + - Increase the volume (by a small amount).
+r - Resume playback from where it was paused.
+c followed by Ctrl+C - Clear the playlist.
+c followed by Ctrl+R - Re-load the playlist.
+list or ll - Display the current playlist.
+play [file] - Play a single file (e.g., play song.mp3)
+play [dir] - Play all files in a directory and its subdirectories
+playlist - List the current playlist.
+v - stop playback
+b - next track
+z - previous track
+c - pause playback
+s - toggle shuffle (read about the m key below if you're going to use shuffle)
+m - toggles the "aaa mode." aaa stands for artist, album, or all. Controls whether cmus shuffles between songs from an artist, album, or from all your songs. You can see the currently set "aaa mode" in the bottom right, next to where the display of the continue, repeat, and shuffle settings.
+x - restart track
+i - focus selection bar on the currently playing track (handy when in shuffle mode and follow is off).
+f - toggle follow. When follow is on, the selection bar will jump the track that is currently playing. For example, in shuffle mode, this controls whether the selection bar jumps between artists or not. You can manually focus on the playing track by pressing i, as noted above. If follow is on, an "f" appears in the bottom right, in the area where continue, repeat, and shuffle are displayed.
+/ - Search. Type /, a string, and enter to find the first instance of that string in your current view. Press n to go to the next matching string, N to go to the previous. cmus's search isn't case sensitive and is quite smart. For example, a search for damned insurrection will return Bulldozer's "Insurrection of the Living Damned".
+- - reduce volume by 10%
++ - increase volume by 10%
+EOF
+}
+
+function hint-pavlov() {
+cat <<EOF
+Aconcagua - the highest mountain outside Asia
+Elbrus - the highest mountain in Europe
+EOF
+}
+
+function hint-bulls-schedule() {
+cat <<EOF
+### Wed Jan 22 7:00pm CT vs. Minnesota United Center TV  NBC Sports Chicago
+EOF
+}
+
+function hint-dollarsign() {
+cat <<EOF
+http://linuxsig.org/files/bash_scripting.html
+\$#   Stores the number of command-line arguments that were passed to the shell program.
+\$_   Stores the last input
+\$?   Stores the exit value of the last command that was executed.
+\$0   Stores the first word of the entered command (the name of the shell program).
+\$*   Stores all the arguments that were entered on the command line ($1 $2 ...).
+"\$@"   Stores all the arguments that were entered on the command line, individually quoted ("\$1" "\$2" ...).
+EOF
+}
+
+function hint-find() {
+cat <<EOF
+dpkg -S /bin/ls
+apt-file find kwallet.h
+EOF
+}
+
+function hint-git() {
+cat <<EOF
+git clone: used to create a local copy of a remote repository
+git branch: used to create, list, and delete branches
+git checkout: used to switch between branches
+git add: used to stage changes for commit
+git commit: used to save changes to the local repository
+git push: used to upload local commits to a remote repository
+git pull;  automatically merges the commits without letting you review them first; simply git fetch followed git merge
+git rebase
+git reflog
+git cherry-pick
+git reset
+git bisect
+git log -p
+git log -S
+git format-patch
+git apply --check
+git am
+
+git commit --amend --no-edit
+git checkout <commit> <file> - Check out a previous version of a file.
+git checkout -b LOCAL_BRANCH origin/REMOTE_BRANCH
+git clone <github https>
+git fetch; update your remote-tracking branches under refs/remotes/<remote>/
+git add -p; add with confirmation
+git reset --hard ; resets HEAD back, resets the index, the working copy to match it
+git stash git stash pop
+git commit -m 'i did this';
+git commit --ammend -m 'I actually did this'
+git rebase origin/master
+git grep -i print ; grep repo for print
+git branch -D LOCAL_BRANCH_TO_DELETE
+git push origin :REMOTE_BRANCH_TO_DELETE
+git push --force origin MY_BRANCH:REMOTE_BRANCH \\erase the stupid shit i committed
+git rebase -i
+EOF
+}
+
+function hint-mackup() {
+cat  <<EOF
+https://github.com/lra/mackup
+
+files:
+
+makcup config -        /home/mp466/.mackup.cfg
+makcup files to link - /home/mp466/.mackup/my-files.cfg
+backup directory -     /home/mp466/SpiderOak\ Hive/dotfiles/Mackup
+
+usage:
+
+mackup backup -    sync your conf files to your synced storage, use this the 1st time you use Mackup.
+mackup restore -   link the conf files already in your synced storage on your system, use it on any new system you use.
+mackup uninstall - uninstall: reset everything as it was before using Mackup.
+mackup list -      display a list of all supported applications.
+mackup -h -        help
+mackup --verbose - show details
+mackup --dry-run - show steps without executing 
+EOF
+}
+
+
+# function hint-misc() {
+# cat  <<EOF
+# EOF
+# }
+
+function hint-i3() {
+cat  <<EOF
+
+mod - Super Key
+mod1 - Alt Key
+
+Controlling i3
+==============
+mod+Shift+r Reload i3
+mod+Shift+e Exit i3
+
+
+Manage Windows
+==============
+mod+Shift+q Kill current window
+mod+Shift+num Move current window to workspace number num
+mod+Shift+f Set window to floating mode
+mod+j Focus on window to the left
+mod+k Focus on window above
+mod+l Focus on window below
+mod+; Focus on window to the right
+mod+Shift+j Move window left
+mod+Shift+k Move window up
+mod+Shift+l Move window down
+mod+Shift+; Move window right
+
+Workspaces
+==========
+mod+num Switch to workspace num
+mod+Shift+num Move current window to workspace number num
+
+Containers
+==========
+mod+e Default container
+mod+h Horizontal split container
+mod+v Vertical split container
+mod+w layout tabbed
+mod+f fullscreen mode
+mod+e layout toggle split
+mod+s layout stacking
+mod+mod1+space flotting
+
+Applications
+============
+mod+enter Open new terminal window
+mod+space Open dmenu
+EOF
+}
+
+function hint-keybinding() {
+cat <<EOF
+key binding
+vim
+===
+:nmap
+:vmap
+:imap
+:verbose map
+:redir! > vim_keys.txt
+:silent verbose map
+:redir END
+
+bash
+====
+man bash | grep "(.-.*)$" -A1
+bind -P|grep "can be found"|sort | awk '{printf "%-40s", $1} {for(i=6;i<=NF;i++){printf "%s ", $i}{printf"\n"}}'
+
+tmux
+====
+tmux list-keys
+
+i3
+==
+grep -e '^[^#]*bind' ~/.i3/config
+EOF
+}
+
+function hint-pydoc() {
+cat <<EOF
+pydoc keyword
+pydoc3 keyword, which presents a man page like doc of the given keyword
+pydoc -g launches the gui version, requires python-tk package,
+pydoc -p port launches a local server serving documentation in html format with search function
+pydoc3 -b is same as pydoc -p but also launches default browser with the page opened
+EOF
+}
+
+function hint-tags() {
+cat <<EOF
+Tags
+----
+vi -t tag - Start vi and position the cursor at the file and line where "tag" is defined.
+:ta tag   - Find a tag.
+Ctrl-]    - Find the tag under the cursor.
+Ctrl-T    - Return to previous location before jump to tag (not widely implemented).
+Ctrl-W }  - Preview definition
+g]        - See all definitions
+:Tags     - tags in quickfix
+:tn       - Move to next definition (:tnext)
+:tp       - Move to previous definition (:tprevious)
+:ts       - List all definitions (:tselect)
+EOF
+}
+
+function hint-quotes() {
+cat <<EOF
+No amount of cajolery, and no attempts
+at ethical or social seduction, can
+eradicate from my heart a deep burning
+hatred for the Tory Party. So far as I
+am concerned they are lower than vermin.
+Aneurin Bevan
+EOF
+}
+
+function hint-mount-external-disk() {
+cat  <<EOF
+sudo fdisk -l
+sudo mount -t ntfs /dev/sdb1 /media
+sudo umount /dev/sdb1
+lsblk - list block devise
+EOF
+}
+
+function hint-functionkeys() {
+cat <<EOF
+Function Keys
+-------------
+F1 - a context sensitive keyword-under-cursor lookup
+F2 - display the current date and time
+F3 - open tags for https://github.com/majutsushi/tagbar
+F4 - Compile with make
+F5 - refresh highlighting and filetype detection
+F6 - Using par to reformat paragraphs in vim
+F7 - Buffers
+F8 - :highlight CursorLine gui=underline cterm=underline<CR>
+F9 - :highlight clear CursorLine<CR>
+F10 - <SID>compile_and_run()<CR> https://github.com/skywind3000/asyncrun.vim
+F11 -
+F12 - https://superuser.com/questions/290082/how-can-i-configure-custom-vim-tags-for-my-text-file-notes
+EOF
+}
+
+function hint-github() {
+cat <<EOF
+Loginto Github make new repo then
+
+Global setup:
+ Set up git - https://help.github.com/articles/set-up-git
+  git config --global user.name "Your Name"
+  git config --global user.email gotbletu@gmail.com
+
+Next steps:
+  mkdir dotfiles
+  cd dotfiles
+  git init
+  touch README
+  git add README
+  git commit -m 'first commit'
+  git remote add origin https://github.com/gotbletu/dotfiles.git
+  git push -u origin master
+
+Existing Git Repo?
+  cd existing_git_repo
+  git remote add origin https://github.com/gotbletu/dotfiles.git
+  git push -u origin master
+
+Importing a Subversion Repo?
+  Check out the guide for step by step instructions.
+     https://help.github.com/articles/importing-from-subversion
+When youre done:
+  Continue
+   https://github.com/gotbletu/dotfiles
+
+==================
+mkdir code-dump
+cd code-dump
+git init
+touch README
+git add README
+git commit -m 'first commit'
+git remote add origin git@github.com:gotbletu/code-dump.git
+git push -u origin master
+
+------
+add new ssh key; make sure openssh is installed
+
+https://help.github.com/articles/generating-ssh-keys
+EOF
+}
+
+function hint-crontab() {
+cat <<EOF
+# Example 0 */5 * * * ~/Scripts/timebomb.sh > /tmp/timebomb_error.log 2>&1
+alias crontab.root.gui='sudo env EDITOR=xdg-open crontab -e'                    #Root Crontab
+# PATH=/usr/bin:/bin:/usr/sbin:/sbin
+
+#ArchLinux
+@hourly export DISPLAY=:0 && flexget
+@daily ~/Scripts/beta/interfacelift.sh          # Interfacelift.com Wallpapers
+#-------- Apps
+#* * * * * DISPLAY=:0.0 pcmanfm -w "$(find ~/Pictures/Wallpapers -type f | shuf -n1)"
+@hourly flexget --cron
+*/3 * * * * if pidof -x /usr/bin/irexec; then exit; else /usr/bin/irexec; fi &
+#@hourly if pidof -x /usr/bin/transmission-daemon; then exit; else /usr/bin/transmission-daemon; fi &
+#------- Scripts
+@daily ~/Public/Dropbox/ShellScripts/scripts/interfacelift.sh
+@daily ~/Public/Dropbox/ShellScripts/packages/Wallbase-Downloader/wallbase.sh
+@weekly ~/Public/Dropbox/ShellScripts/scripts/bleachbit_cleanlist.sh
+#-------- Cleanup
+0 */6 * * * find ~/.local/share/Trash/files/* -mtime +14 -exec rm {} \;         #Empty Trashbin
+0 */3 * * * find ~/Downloads/* -depth -type d -empty -exec rmdir {} \;          #Rm Empty folders
+0 */4 * * * find ~/Downloads/* -mtime +7 -exec trash-put {} \;                  #Send to trash, older than 7days
+#@hourly find ~/Downloads/* -type f -iregex [.*\.\(nzb\|torrent\)$] -exec rm {} +
+
+#Importo
+@hourly export DISPLAY=:0 && /media/Genjutsu/Scripts/packages/flexget-dev/bin/flexget
+*/3 * * * * export DISPLAY=:0 && if pidof -x /usr/bin/irexec; then exit; else /usr/bin/irexec; fi &
+
+#Cleanup
+*/5 * * * * find ~/Downloads/* -iname *.nzb -exec rm {} +   #Perm Delete All NZB files
+*/10 * * * * find ~/Downloads/* -iname *.torrent -exec rm {} +   #Perm Delete All Torrent files
+0 */3 * * * find ~/Downloads/* -depth -type d -empty -exec rmdir {} \;  #Perm Delete Empty folders
+0 */4 * * * find ~/Downloads/* -mtime +7 -exec trash {} \;      #Delete Downloaded files to trash
+0 */6 * * * find ~/.local/share/Trash/files/* -mtime +14 -exec rm {} \; #Perm Delete All Trashbin files
+
+#KDE
+*/30 * * * * export DISPLAY=:0 && if pidof -x /usr/bin/transmission-qt; then exit; else /usr/bin/transmission-qt -m; fi &
+
+#Gnome
+*/30 * * * * export DISPLAY=:0 && if pidof -x /usr/bin/transmission-gtk; then exit; else /usr/bin/transmission-gtk -m; fi &
+
+#Scripts
+0 */3 * * * ~/Scripts/cronjobs/wallpaper.sh
+0 3 * * * cd ~/Storage/.blackbox/dojin_incoming && sh ~/Scripts/cronjobs/rename.sh
+
+GUI
+use echo $DISPLAY
+# use current screen
+* * * * * DISPLAY=:0 app_name
+* * * * * env DISPLAY=:0 app_name
+* * * * * export DISPLAY=:0 app_name
+# multiple monitors
+* * * * * DISPLAY=:0.0 app_name
+
+Common Mistake
+http://askubuntu.com/questions/23009/reasons-why-crontab-does-not-work
+# use absolute path
+ffmpeg > to > /usr/bin/ffmpeg
+# newline
+older versions requires a empty line at the end of the crontab file
+
+Ranges   use hyphens
+8-11      For 8 9 10 11 hours only
+
+List   use commas
+2,3,4,5 or 0-4,8-13
+
+Special Strings:
+@reboot         Run once, at startup.
+@yearly / @annually   Run once a year, "0 0 1 1 *".
+@monthly      Run once a month, "0 0 1 * *".
+@weekly         Run once a week, "0 0 * * 0".
+@daily / @midnight   Run once a day, "0 0 * * *".
+@hourly         Run once an hour, "0 * * * *".
+
+*    *    *    *    *  command to be executed
+┬    ┬    ┬    ┬    ┬
+│    │    │    │    │
+│    │    │    │    │
+│    │    │    │    └───── day of week   (0 - 7)      [0 or 7 is Sunday, or use names - sun, mon, tue]
+│    │    │    └────────── month   (1 - 12)   [or names - jan, feb, mar]
+│    │    └─────────────── day of month   (1 - 31)
+│    └──────────────────── hour      (0 - 23)
+└───────────────────────── min      (0 - 59)
+EOF
+}
+
+function hint-regexs() {
+cat <<EOF
+\A  Start of string
+\b  Match empty string at word (\w+) boundary
+\B  Match empty string not at word boundary
+\d  Digit
+\D  Non-digit
+\s  Whitespace [ \t\n\r\f\v], see LOCALE,UNICODE
+\S  Non-whitespace
+\w  Alphanumeric: [0-9a-zA-Z_], see LOCALE
+\W  Non-alphanumeric
+\Z  End of string
+\g<id>  Match prev named or numbered group,
+        '<' & '>' are literal, e.g. \g<0>
+        or \g<name> (not \g0 or \gname)
+
+Module level functions:
+compile(pattern[, flags]) -> RegexObject
+match(pattern, string[, flags]) -> MatchObject
+search(pattner, string[, flags]) -> MatchObject
+findall(pattern, string[, flags]) -> list of strings
+finditer(pattern, string[, flags]) -> iter of MatchObjects
+split(pattern, string[, maxsplit, flags]) -> list of strings
+sub(pattern, repl, string[, count, flags]) -> string
+subn(pattern, repl, string[, count, flags]) -> (string, int)
+escape(string) -> string
+purge() # the re cache
+
+RegexObjects (returned from compile()):
+compile(pattern[, flags]) -> RegexObject
+match(pattern, string[, flags]) -> MatchObject
+search(pattner, string[, flags]) -> MatchObject
+findall(pattern, string[, flags]) -> list of strings
+finditer(pattern, string[, flags]) -> iter of MatchObjects
+split(pattern, string[, maxsplit, flags]) -> list of strings
+sub(pattern, repl, string[, count, flags]) -> string
+subn(pattern, repl, string[, count, flags]) -> (string, int)
+escape(string) -> string
+purge() # the re cache
+
+MatchObjects (returned from match() and search()):
+.expand(template) -> string, Backslash & group expansion
+.group([group1...]) -> string or tuple of strings, 1 per arg
+.groups([default]) -> tuple of all groups, non-matching=default
+.groupdict([default]) -> {}, Named groups, non-matching=default
+.start([group]) -> int, Start/end of substring match by group
+.end([group]) -> int, Group defaults to 0, the whole match
+.span([group]) -> tuple (match.start(group), match.end(group))
+.pos       int, Passed to search() or match()
+.endpos    int, "
+.lastindex int, Index of last matched capturing group
+.lastgroup string, Name of last matched capturing group
+# .re        regex, As passed to search() or match()
+.string    string, "
+EOF
+}
+
+function hint-ux() {
+cat <<EOF
+XZ Utils xz-utils (previously LZMA Utils)
+unxz    my_archive.tar.xz      # results in my_archive.tar
+tar -c --xz   -f my_archive.tar.xz   /some_directory
+tar -x --xz   -f weechat-1.8.tar.xz
+EOF
+}
+
+function hint-tmux() {
+cat  <<EOF
+tmux session rename = "Ctrl-a $"
+tmux window rename = "Ctrl-a ,"
+tmux-ls = "tmux ls"
+tmux-d = "tmux detach"
+tmux-dir = "tmux-dir"
+tmux-new = "tmux new-session -As $(basename "$PWD") "
+tu = 'tmuxp load ~/.vim/update.yaml'
+ta = 'tmuxp load ~/.vim/amh.yaml'
+tf = 'tmuxp load ~/.vim/fun.yaml'
+tm = 'tmuxp load ~/.vim/misc.yaml'
+tmain = 'tmuxp load ~/.vim/main.yaml'
+tj = 'tmuxp load ~/.vim/jeopardy.yaml'
+tw = 'tmuxp load ~/.vim/weather.yaml'
+twarren = 'tmuxp load ~/.vim/warren.yaml'
+EOF
+}
+
+function hint-fasd() {
+cat <<EOF
+fasd - quick access to files and directories
+f ='fasd -f'             # file
+a ='fasd -a'             # any
+s ='fasd -si'            # show / search / select
+d ='fasd -d'             # directory
+
+m ='f -e mpv'            # open with video player
+o ='a -e xdg-open'       # open any file
+v ='f -e vim'            # open with text editor
+
+sd ='fasd -sid'          # interactive directory selection
+sf ='fasd -sif'          # interactive file selection
+z ='fasd_cd -d'          # cd, same functionality as j in autojump
+zz ='fasd_cd -d -i'      # cd with interactive selection
+EOF
+}
+
+##---------------------------------------vim-----------------------------------------------------
+
+# function hint-vim-() {
+# cat <<EOF
+# EOF
+# }
+
+function hint-vim-insert-mode() {
+cat <<EOF
+Ctrl+w - delete back one word
+Ctrl+u - delete all entered characters before the cursor
+Ctrl+h - delete one character (backspace)
+Ctrl+o - enters Insert Normal Mode -> You can execute one command (e.g.: zz) and then return back to Insert mode
+EOF
+}
+
+function hint-vim-args() {
+cat <<EOF
+:arg                  -  to show the files in your current arglist
+:argdo                -  to run a command on your arglist
+:argadd or :arga      -  to add files to your arglist
+:argdelete or :argd   -  to remove files from your arglist
+:argdo                -  update to save all changes to your arglist
+:argdo                -  undo to undo changes to your arglist
+EOF
+}
+
+function hint-vim-buffers() {
+cat <<EOF
+:ls                    - show buffer list
+:ball                  - open all buffers
+:bd                    - deletes the current buffer
+:bd!                   - remove buffer from buffer list, disregarding changes
+:bNumber               - changes to buffer N
+:bn                    - open next buffer window
+:bp                    - open previous buffer in current window
+:bfirst                - first in buffer list
+:blast                 - last in buffer list
+:b#                    - goto last buffer edited
+:b part_of_filename    - goto file name, works with <tab> completion
+:Buffer                - select from open buffers from fzf
+:b fo*ar, :b fo/**/bar - accepts file globbing, the classic * and a special one, **, which stands for "any subdirectory"
+
+:e FILENAME  - edit file names
+:new         - create split window
+:enew        - open one in current window
+:vnew        - open one vertically split window
+:tabnew      - open one in a tab
+:sb(etc)     - split variant of :b is :sb.
+
+Indicators (chars in the same column are mutually exclusive):
+u - an unlisted buffer (only displayed when [!] is used) |unlisted-buffer|
+% - the buffer in the current window
+# - the alternate buffer for ":e #" and CTRL-^
+a - an active buffer: it is loaded and visible
+h - a hidden buffer: It is loaded, but currently not displayed in a window |hidden-buffer|
+- - a buffer with 'modifiable' off
+= - a readonly buffer
+R - a terminal buffer with a running job
+F - a terminal buffer with a finished job
+? - a terminal buffer without a job: :terminal NONE
++ - a modified buffer
+x - a buffer with read errors
+
+:h arglist
+
+:args path/to/files/*.md - open directory in buffers
+:args <file_a> <file_b> <file_c>    - if 50 files open but back to 3 of them. Add three to argument list
+:argu 2                             - jump to <file_b> in the argument list
+
+Use <c-d> to list out completion
+
+:Unite file
+:Unite buffer
+
+http://derekwyatt.org/vim/tutorials/
+https://vimeo.com/6306508
+https://vimeo.com/6307101
+https://vimeo.com/6342264
+EOF
+}
+
+function hint-vim-change() {
+cat <<EOF
+One of the next major keys in furthering my development was c. This key analogizes to change.
+cw — change to next word
+cc — change entire line
+ce — change from cursor to end of word
+c$ — change to end of line
+ci” — change inside double quotes
+ci( — change inside parentheses.
+ci[ — change square brackets.
+ca” — change around double quotes
+cfx — change until next found occurrence of x
+While powerful, this key gains further might when paired with targets.vim.
+f & F - can be thought of as find
+f will search forward, F searches backward
+t & T - placement right before a character
+t will search forward, T searches backward
+EOF
+}
+
+function hint-vim-changeslist() {
+cat <<EOF
+changelist position of change that can be undone
+:changes  - You can view the contents of the changelist
+g;        - move back through the changelist
+g,        - move forwards through the changelist
+g- / g+   - if you get stuck with u / <C-r> - undo list navigation
+
+:tag      - jump to a specified tag
+C-t       - jump to older tag
+C-]       - jump to tag definition
+EOF
+}
+
+function hint-vim-completion() {
+cat <<EOF
+Read :h ins-completion
+
+Completions in insert mode:
+
+movement:
+next                                          CTRL-N
+previous                                      CTRL-P
+
+Whole lines                                   CTRL-X CTRL-L
+keywords in the current file                  CTRL-X CTRL-N
+keywords in 'dictionary'                      CTRL-X CTRL-K
+keywords in 'thesaurus', thesaurus-style      CTRL-X CTRL-T
+keywords in the current and included files    CTRL-X CTRL-I
+tags                                          CTRL-X CTRL-]
+file names                                    CTRL-X CTRL-F
+definitions or macros                         CTRL-X CTRL-D
+Vim command-line                              CTRL-X CTRL-V
+User defined completion                       CTRL-X CTRL-U
+omni completion                               CTRL-X CTRL-O
+Spelling suggestions                          CTRL-X s
+EOF
+}
+
+function hint-vim-ctrl() {
+cat <<EOF
+CTRL + (insert key)
+v - visual block mode
+w - window adjustments
+" ctrl + w _ Max out the height of the current split
+" ctrl + w | Max out the width of the current split
+" ctrl + w = Normalize all split sizes, which is very handy when resizing terminal
+r - redo
+b - back one full screen
+f - forward one full screen
+d - forward half screen
+u - back half screen
+[ - built in <esc> mapping
+x - insert mode, auto-complete a filename.
+
+EOF
+}
+
+function hint-vim-diff() {
+cat  <<EOF
+vim -d 1.cpp 2.cpp
+vimdiff 1.cpp 2.cpp
+
+Ctrl-W w - switch panel
+
+dp - diffput: puts changes under the cursor into the other file making them identical (thus removing the diff).
+do - diffget: (o => obtain). The change under the cursor is replaced by the content of the other file making them identical.
+
+]c             Jump to the next diff
+[c             Jump to the previous diff
+
+zo - open folded text
+zc - close folded text
+zr - remove all folds
+zm - makf all folds
+
+:diffupdate - re-scan the files for differences
+
+MOVING BETWEEN WINDOWS 
+        CTRL-W h        move to the window on the left 
+        CTRL-W j        move to the window below 
+        CTRL-W k        move to the window above 
+        CTRL-W l        move to the window on the right 
+        CTRL-W t        move to the TOP window 
+        CTRL-W b        move to the BOTTOM window 
+  Moving windows 
+        CTRL-W K        move window to the upper 
+        CTRL-W H        move window to the far left 
+        CTRL-W J        move window to the bottom 
+        CTRL-W L        move window to the far right
+
+If you load up two files in splits (:vs or :sp), you can do :diffthis on each
+window and achieve a diff of files that were already loaded in buffers
+
+:diffoff - can be used to turn off the diff mode
+:only | wq - quit other windows, write and quit
+
+:h :diffthis
+:h :diffoff
+:h :windo
+
+for git mergetool
+
+The default identifiers that can be selected using diffget
+LO local master copy
+RE remote master to be merged
+BA common ancestor of remote and local changes.
+
+https://vim.fandom.com/wiki/A_better_Vimdiff_Git_mergetool
+LOCAL  - A temporary file containing the contents of the file on the current branch.
+BASE   - A temporary file containing the common base for the merge.
+REMOTE - A temporary file containing the contents of the file to be merged.
+
+https://stackoverflow.com/questions/14904644/how-do-i-use-vimdiff-to-resolve-a-git-merge-conflict
+
+https://begriffs.com/posts/2019-07-19-history-use-vim.html?hn=3#diffs-and-patches
+" shortcuts for 3-way merge
+map <Leader>1 :diffget LOCAL<CR>
+map <Leader>2 :diffget BASE<CR>
+map <Leader>3 :diffget REMOTE<CR>
+EOF
+}
+
+function hint-vim-folding() {
+cat <<EOF
+Vim folding commands
+
+au BufWinLeave * mkview
+au BufWinEnter * silent loadview
+
+Essential
+zi turns folding on
+za When on a closed fold, open it.and vice-versa.
+zc closes current fold
+zR To open all folds
+zM closes all open folds.
+zv expands folds to reveal cursor
+zfG To fold to the end of the file
+
+
+{visual mode} zf
+zf12j To fold the next 12 lines
+zf#j creates a fold from the cursor down # lines.
+zf/string creates a fold from the cursor to string .
+zf} To fold the next paragraph
+zA When on a closed fold, open it recursively.and vice-versa
+zj moves the cursor to the next fold.
+zk moves the cursor to the previous fold.
+zo opens a fold at the cursor.
+zO opens all folds at the cursor.
+zm increases the foldlevel by one.
+zr decreases the foldlevel by one.
+zd deletes the fold at the cursor.
+zE deletes all folds.
+[z move to start of open fold.
+]z move to end of open fold.
+EOF
+}
+
+function hint-fzf() {
+cat <<EOF
+Command            List
+:Files [PATH]       Files (similar to :FZF)
+:GFiles [OPTS]      Git files (git ls-files)
+:GFiles?            Git files (git status)
+:Buffers            Open buffers
+:Colors             Color schemes
+:Ag [PATTERN]       ag search result (ALT-A to select all, ALT-D to deselect all)
+:Lines [QUERY]      Lines in loaded buffers
+:BLines [QUERY]     Lines in the current buffer
+:Tags [QUERY]       Tags in the project (ctags -R)
+:BTags [QUERY]      Tags in the current buffer
+:Marks              Marks
+:Windows            Windows
+:Locate PATTERN     locate command output
+:History            v:oldfiles and open buffers
+:History:           Command history
+:History/           Search history
+:Snippets           Snippets (UltiSnips)
+:Commits            Git commits (requires fugitive.vim)
+:BTags [QUERY]      Tags in the current bufferCommits           Git commits for the current buffer
+:Commands           Commands
+:Maps               Normal mode mappings
+:Helptags           Help tags 1
+:Filetypes          File types
+:FZF                Search for files
+:FZFLines           Search for line in file
+:FZFMru             Search for most recently opened file
+~~ - tigger for fzf
+Ctrl+T - Find files and directories: At shell, FZF scans the files and directories inside your current directory
+Alt+C - Find directories: At shell, to autocomplete and find only directories.
+Ctrl+R - Find from history: Ctrl+R does the fuzzy finding for commands from your shell history.
+TAB - Find process to kill: type kill, press TAB and you get a list of processes with full details.
+EOF
+}
+
+function hint-vim-help() {
+cat  <<EOF
+: is used for cmdline/Ex-mode commands (:help :help)
+:h help-summary
+:helpgrep
+' is used for options (:help 'incsearch')
+No prefix for normal mode commands (:help CTRL-])
+i_ for insert mode (:help i_^-[)
+v_ for visual mode (:help v_^-])
+
+Ctrl-w o (close empty window)
+Ctrl-] - browsing Vim’s documentation, you can follow the link under the cursor with the command
+EOF
+}
+
+function hint-vim-hotkey() {
+cat <<EOF
+Hotkeys
+--------------------
+/^fred.*joe.*bill  : line beginning with fred, followed by joe then bill
+/^[A-J]            : line beginning A-J
+/^[A-J][a-z]\+\s   : line beginning A-J then one or more lowercase characters then space or tab
+/fred\_.\{-}joe    : fred then anything then joe (over multiple lines)
+/fred\_s\{-}joe    : fred then any whitespace (including newlines) then joe
+/fred\|joe         : fred OR joe
+#G              Go to line
+C-r             redo
+
+Navigate
+C-F, C-D   pagedown
+C-B, C-U   pageup
+f,F   move to 1st occurance of that letter, leftwards
+: or ,      move to next or previous, using f or F
+
+Copy / Pasting
+mx then y'x        # copy mutli lines
+mx then d'x        # cut multi lines
+yw                 # copy until end of single word
+y$                 # copy until end of single line
+C-v,jj,I,text,Esc   #Visual Block insert front of liness
+C-v,jj,$,A,text,Esc   #Visual Block append end of line
+
+C-v,jj,x,Esc      #Visual Block delete from liness
+c      change
+ct<letter>   change until letter
+s, S      delete char then go into insertmode, delete line then insertmode
+Repeat
+j.
+o, O       insert new line below, above
+c, C      change line go into insert mode
+\"+y or 5\"+y   copy to x clipboard (can be used in visual mode also
+EOF
+}
+
+function hint-vim-jumplists() {
+cat <<EOF
+jumplist - remembers each position to which the cursor jumped, rather than scrolled.
+
+:jumps    - view the contents of the jumplist
+<leader>j - Goto Jumplist
+ctrl-O    - move backwards through the jumplist
+ctrl-I    - move forwards through the jumplist
+ctrl-]    - When you are browsing Vim’s documentation, you can follow the link under the cursor
+nG        - jump to line number
+}         - jump to previous blank line
+{         - jump to next blank line
+[{        - jump to previous block
+]}        - jump to next block
+(         - jump to beginning of sentence
+)         - jump to end of sentence
+[[        - jump to beginning of section
+]]        - jump to end of section
+%         - jump to matching delimiter
+
+gd        - Goto to local desclaration
+gD        - Goto to global desclaration
+\`\`      - return to the cursor position before the latest jump (undo the jump) (Two back ticks)
+EOF
+}
+
+function hint-vim-leaders() {
+cat <<EOF
+Leader
+------
+<leader>a - :Ag
+<leader>b :Buffers to search for open buffers
+<leader>bb - ggO#!/usr/bin/env bash<Esc> " add shebangs
+<leader>bd - :bdelete close buffer
+<leader>bp - ggO#!/usr/bin/env python3<Esc> " add shebangs
+<leader>bl - :ls<CR>
+<leader>c - print /*  Thu Apr 12, 2018 12:21:36 added by Michael Prentiss */
+<leader>C - print date  04-12-2018
+<leader>e - :e <C-R>=expand('%:p:h') . '/'<CR> "Edit a file in the directory of the file being edited
+<leader>ew - :e %%
+<leader>es - :sp %%
+<leader>ev - :vsp %%
+<leader>et - :tabe %%
+<leader>f - :GFiles search files in git
+<leader>fc - Find merge conflict markers
+<leader>ff - display all lines with keyword under cursor and ask which one to jump to
+<Leader>F - :Files<CR>  to search all files.
+<leader>g -
+<leader>ga :Git add %:p<CR><CR>
+<leader>gs :Gstatus<CR>
+<leader>gc :Gcommit -v -q<CR>
+<leader>gt :Gcommit -v -q %:p<CR>
+<leader>gd :Gdiff<CR>
+<leader>ge :Gedit<CR>
+<leader>gr :Gread<CR>
+<leader>gw :Gwrite<CR><CR>
+<leader>gl :silent! Glog<CR>:bot copen<CR>
+<leader>gp :Ggrep<Space>
+<leader>gm :Gmove<Space>
+<leader>gb :Git branch<Space>
+<leader>h - :History<CR> " to search buffer history.
+<leader>i - insert letter under cursor
+<leader>j - vim function goto jumplist
+<leader>l - :BLines<CR> to search for lines in current buffer
+<leader>L - :Lines<CR> to search for lines in loaded buffers
+<leader>m - :Marks<CR>  to search for marked lines.
+<leader>md - markdown to html converter in perl
+<leader>n - vim function rename file
+<leader>N - :enew<cr>
+<leader>pk - use pydoc.vim to search for word under cursor
+<leader>pK - use pydoc.vim to search for WORD under cursor
+<leader>pw - use pydoc.vim to search for word under cursor
+<leader>pW - use pydoc.vim to search for WORD under cursor
+<leader>ss - spell checking  http://vimdoc.sourceforge.net/htmldoc/spell.html
+<leader>sn - Move next misspelled forward
+<leader>sp - Move next misspelled back
+<leader>sa - add word under cursor to dictionary
+<leader>s? - suggest correctly spelled words
+<silent>s! - take first suggestion for spelling correction
+<leader>s" - surround word with ",'  or delete them
+<leader>s' - surround word with ",'  or delete them
+<leader>sd - surround word with ",'  or delete them
+<leader>SA - select all easy
+<leader>SS - :call fzf#run({ " Open files in horizontal split
+<leader>t - :BTags to search for tags in current buffer
+<leader>T - :Tags  to search for tags across project.
+<leader>vp - vimux Prompt for a command to run
+<leader>vl - vimux Run last command executed by VimuxRunCommand
+<leader>vz - vimux Zoom the tmux runner pane
+<leader>vc - vimux Close the tmux runner pane
+<leader>vi - vimux Inspect runner pane
+
+<leader>VV - :call fzf#run({ " Open files in vertical horizontal split
+<leader>Y - in python filetype envoke yapf
+
+nmap <leader>w :w!<cr>
+nnoremap <leader>w :w!<cr>
+inoremap <leader>w <C-c>:w!<cr>
+noremap <leader>W :w !sudo tee % > /dev/null<CR>
+
+"Copy & paste to system clipboard with <Space>p and <Space>y:
+xmap <leader>y "+y
+xmap <leader>d "+d
+nmap <leader>p "+p
+nmap <leader>P "+P
+xmap <leader>p "+p
+xmap <leader>P "+P
+
+?? inoremap <leader>j <esc> " ll as ESC in insert mode 
+
+<leader>lwc - count word in latex
+<leader>pp - Toggle paste mode on and off
+<leader>r - shortcut to compile/run the current file
+<leader>rbl - remove blank lines
+<leader>rws - shortcut to strip trailing whitespace
+<leader>z - toggle GoYo
+
+<leader><Enter> :call fzf#run({
+<leader><Space> :nohighlight
+<leader><leader> :jump to the previously edited buffer
+
+<leader>ST -  below current line  super quick search and replace word under cursor
+<leader>%  -  global super quick search and replace word under cursor
+
+" SHORTCUT TO REFERENCE CURRENT FILE'S PATH IN COMMAND LINE MODE
+cnoremap <expr> %% expand('%:h').'/'<cr>
+map <leader>e :edit %%
+map <leader>v :view %%
+
+<leader>sv :source $MYVIMRC<cr>
+<leader>" viw<esc>a"<esc>bi"<esc>lel
+<leader>' viw<esc>a'<esc>bi'<esc>lel
+<leader>( viw<esc>a)<esc>bi(<esc>lel
+
+<leader>bs - Search through open buffers with Vim (self.vim), use with :FZFLines
+
+<leader>zj - vim function move next fold
+<leader>zk - vim function move previous fold
+<leader>WP - vim function Word Processor Mode 
+
+wiki
+----
+<leader>ww           - Open default wiki index file.
+<leader>wt           - Open default wiki index file in a new tab.
+<leader>ws           - Select and open wiki index file.
+<leader>wd           - Delete wiki file you are in.
+<leader>wr           - Rename wiki file you are in.
+<leader>wh           - Convert current wiki page to HTML.
+<leader>whh          - Convert current wiki page to HTML and open it in webbrowser
+EOF
+}
+
+function hint-vim-macros() {
+cat  <<EOF
+Macros
+------
+qq     -  start recording
+q      -  finish recording
+@q     -  playback macro
+10@q   -  playback macro 10 times
+
+You can run macro in a register a on lines 5 to 10 with 
+:5,10norm! @a
+
+all lines using
+:%norm! @a
+EOF
+}
+
+function hint-vim-make() {
+cat <<EOF
+Steal Mr. Bradley's formatter & add it to our spec_helper
+http://philipbradley.net/rspec-into-vim-with-quickfix
+
+Configure the `make` command to run RSpec
+set makeprg=bundle\ exec\ rspec\ -f\ QuickfixFormatter
+
+NOW WE CAN:
+- Run :make to run RSpec
+- :cl to list errors
+- :cc# to jump to error by number
+- :cn and :cp to navigate forward and back
+EOF
+}
+
+function hint-vim-marks() {
+cat  <<EOF
+Marks are bookmarks within a Vim document
+vim-signature - Plugin to toggle, display and navigate marks
+
+http://vim.wikia.com/wiki/Using_marks
+m{a-z}    - set buffer local marks
+m{A-Z}    - set global marks
+'{a-zA-Z} - go to {a-zA-Z} mark at first non blank character
+\`{a-zA-Z} - go to {a-zA-Z} mark, preserve cursor column number
+
+Marks can be used as motions, v'a (visually select from here to mark "a")
+
+ma            set mark a at current cursor location
+'a            jump to line of mark a (first non-blank character in line)
+\`a           jump to position (line and column) of mark a
+d'a           delete from current line to line of mark a
+d\`a          delete from current cursor position to position of mark a
+c'a           change text from current line to line of mark a
+y\`a          yank text to unnamed buffer from cursor to position of mark a
+
+:22,55 d - That will delete lines 22 through 55.
+:'g,'k d - If you have line 22 marked as g and 55 marked as k, you could substitute
+:'g,'k w filename
+:'g,'k s/foo/bar/g
+
+It is possible to navigate between lowercase marks:
+]'      - jump to next line with a lowercase mark
+['      - jump to previous line with a lowercase mark
+]\`     - jump to next lowercase mark
+[\`     - jump to previous lowercase mark 
+
+Vim has some special marks set automatically
+\`. - jump to position where last change occurred in current buffer
+'^ - position of cursor when last Vim last left insert mode - This is how gi command works
+\`" - jump to position where last exited current buffer
+'' - jump back (to line in current buffer where jumped from)
+\`\` - jump back (to position in current buffer where jumped from)
+\`[ or \`] - jump to beginning/end of previously changed or yanked text
+\`< or \`> - jump to beginning/end of last visual selection
+\`0 - jump to position in last file edited (when exited Vim)
+\`1 - like \`0 but the previous file (also \`2 etc)
+
+:marks        list all the current marks
+:marks aB     list marks a, B
+:delmarks a    - delete mark a
+:delmarks a-d  - delete marks a, b, c, d
+:delmarks abxy - delete marks a, b, x, y
+:delmarks aA   - delete marks a, A
+:delmarks!     - delete all lowercase marks for the current buffer (a-z)
+[A-Z]         globals
+[a-z]         in buffer
+Commands like d'a operate "linewise" and include the start and end lines.
+Commands like d\`a operate "characterwise" and include the start but not the end character.
+EOF
+}
+
+function hint-vim-misc() {
+cat  <<EOF
+:browse old
+
+iabbrev waht what
+iabbrev r@@ My name is Guilherme Quental<cr>You can email me here: guilherme@quent.al
+
+" macros
+" let @q = 'f"a'
+" let @w = 'F"i'
+" set permanent register
+" let @a = "echo 'gotcha'\<CR>"
+" repeat the last macro you used,
+nnoremap Q @@
+
+
+iabbrev waht what
+iabbrev r@@ My name is Guilherme Quental<cr>You can email me here: guilherme@quent.al
+
+EOF
+}
+
+function hint-vim-modes() {
+cat <<EOF
+Normal mode: window movement
+Scrolling window
+Page up/down              -  ctrl-f, ctrl-b
+Half-page up/down         -  ctrl-d, ctrl-u
+Single-line up/down       -  ctrl-y, ctrl-e
+
+Insert mode edits
+Insert                    -  i, I
+Append                    -  a, A
+Delete word before cursor -  ctrl-w
+Delete line before cursor -  ctrl-u
+Dedent/indent             -  ctrl-d, ctrl-t
+EOF
+}
+
+function hint-vim-motions() {
+cat <<EOF
+Basic Movement
+--------------
+hjkl                                        -  down, up,  left, right
+G                                           -  move to last line
+gg                                          -  move to first line (or :0<CR>)
+0 and $                                     -  take you from the beginning to the end of the line.
+
+Word motions
+Next/prev word beginning, ending                        -  w, b, e, ge
+moves you x words forward                               -  starting with a number (xw)
+Next/prev word beginning, ending separated by spaces    -  W, B and E
+
+Character jump
+Find char forward, backwards                -  f{char}, F{char}
+Til char forward, backwards                 -  t{char}, T{char}
+Repeat find                                 -  ;, ,
+Sentences                                   -  ), (
+Paragraphs                                  -  }, {
+Motions can be preceded by counts           -  5j 3w 2}
+Two easy ways to jump to a line number      -  xxG, :xx<CR>
+move up and down half a page                -  ctrl-u, ctrl-d
+jump high, medium, and low parts of screen  -  H,M,L
+jump high, medium, and low parts of screen  -  zt, zz, and zb
+
+Modifiers (adjectives)
+A word/inner word                           -  aw, iw
+A sentence/inner sentence                   -  as, is
+A paragraph/inner paragraph                 -  ap, ip
+A tag/inner tag                             -  at, it
+Other text objects                          -  ", ’, >, }, ), ], ‘
+
+''          return to the line where the cursor was before the latest jump (Two single quotes.)
+\`\`          return to the cursor position before the latest jump (undo the jump) (Two back ticks)
+\`.          jump to the cursor location of the last-changed line
+'.          jump to the begining of the last-changed line
+^o          undo the last jump
+
+jumps to the next occurrence of the keyword under cursor         - *
+jumps to the previous occurrence of the keyword under cursor     - g*
+EOF
+}
+
+function hint-vim-location-list() {
+cat  <<EOF
+Location list
+=============
+
+Location list -> one per buffer
+:lopen
+:lnext      :lne   ]l
+:lprevious  :lpr   [l
+:lfirst            [L
+:llast             ]L
+:lpfile            [<C-L>
+:lnfile            ]<C-L>
+
+:Lfilter
+
+EOF
+}
+
+function hint-vim-quickfix() {
+cat  <<EOF
+Quickfix window
+===============
+
+List Creation
+
+:make - Compile and capture errors
+:grep - Search files
+
+:vimgrep - Vim's Internal grep
+:helpgrep - Search Bim help Files
+
+:vimgrep /{pattern}/ %
+:vimgrep /<C-r>// %
+
+Managin quickfix window
+
+:copen - open the quickfix window
+:cclose - close the quickfix window
+
+:cc - jump to entry
+:cc[nr] - jump to specific entry
+<CR> - Jump to entry under the cursor
+CTRL-W <CR> - Jump with new window
+
+:cnext/:cprevious - Jump to next/previous entry
+:cwindow - open the quickfix window if there are entries and close if none
+:cbelow / :cabove - jump to the entry below/above the current line
+:cafter / :cbefore - jump to entry afterbefore the current position
+:cnfile / :cpfile - jump to entry in next/previous file
+:cfirst (:crewind_ :clast - jumpr ot first/last entry
+
+Quickfix history
+
+:chistory - display quickfix list stack
+:colder - go to older quickfix list
+:cnewer - go to newer quickfix list
+
+Customizing quickfix
+:set makeprg - customize the make program
+     :set makeprg=staticcheck
+
+:set grepprg - Customize the grep program
+     : set grepprg=git\ grep\ -n\ --no-color
+
+:set errorformat - specifies a list of formats to parse
+      : set errorformat=%f\|%l\ col\ %c-%k\|\ %m
+         %f - file name
+         %l - line number
+         %c - column number
+         %k - end column number
+         %m - error mressage
+
+:cdo - execute command for each entry
+     :cdo s/OLD/NEW/g | w
+:cfdo - executre commands for each file
+     :cfdo %s/OLD/NEW/g | w
+
+:cfile :cgetfile - read from file
+:cfile filename / :cgetfile filename
+
+:cbuffer :cgetbuffer - read from buffer
+:e filename
+:cbuffer :cgetbuffer
+
+Plugins
+Cfilter - Bundled plugin to reduce the number of entries
+:Cfilter /{pat} or :Cfilter! /{pat}/ 
+
+qfreplace - to perform the replacement in quickfix
+
+navigate with vim-unimpared  mappings
+
+[q and ]q - go forward and back
+[Q and ]Q - go to the beginning and end
+
+https://neovim.substack.com/p/a-quick-guide-to-quickfix
+":gr [pattern] . -R” (or another command that creates a quickfix list)
+":cope” to open that list in the quickfix window
+Use cursor navigation, /search, etc. to move to the line with the file you want
+ENTER to open that file
+
+vim-unimpaired
+==============
+*[a*     |:previous|     - edit previous file in argument list
+*]a*     |:next|         - edit next file in argument list
+*[A*     |:first|        - edit first file in argument list
+*]A*     |:last|         - edit last file in argument list
+*[b*     |:bprevious|    - edit previous buffer in buffer list
+*]b*     |:bnext|        - edit next buffer in buffer list
+*[B*     |:bfirst|       - edit first buffer in buffer list
+*]B*     |:blast|        - edit last buffer in buffer list
+*[l*     |:lprevious|    - edit previous error in the location list that includes a file name.
+*]l*     |:lnext|        - edit next error in the location list that includes a file name.
+*[L*     |:lfirst|       - edit first error in the location list that includes a file name.
+*]L*     |:llast|        - edit last error in the location list that includes a file name.
+*[<C-L>* |:lpfile|       - edit last error in previous file in the location list that includes a file name.
+*]<C-L>* |:lnfile|       - edit last error in next file in the location list that includes a file name.
+*[q*     |:cprevious|    - edit previous error in the quickfix list that includes a file name.
+*]q*     |:cnext|        - edit next error in the quickfix list that includes a file name.
+*[Q*     |:cfirst|       - edit first error in the quickfix list that includes a file name.
+*]Q*     |:clast|        - edit last error in the quickfix list that includes a file name.
+*[<C-Q>* |:cpfile| (Note that <C-Q> only works in a terminal if you disable
+*]<C-Q>* |:cnfile| flow control: stty -ixon)
+*[<C-Q>* |:cpfile|       - edit last error in previous file in the quickfix list that includes a file name.
+*]<C-Q>* |:cnfile|       - edit last error in next file in the quickfix list that includes a file name.
+*[t*     |:tprevious|    - edit previous error in the tag list that includes a file name.
+*]t*     |:tnext|        - edit next error in the tag list that includes a file name.
+*[T*     |:tfirst|       - edit first error in the tag list that includes a file name.
+*]T*     |:tlast|        - edit last error in the tag list that includes a file name.
+*[<C-T>* |:ptprevious|   - edit previous error in the tag list that includes a file name in preview window
+*]<C-T>* |:ptnext|       - edit next error in the tag list that includes a file name in preview window
+*[f* - Go to the file preceding the current one alphabetically in the current file's directory.
+*]f* - Go to the file succeeding the current one alphabetically in the current file's directory.
+*[n* - Go to the previous SCM conflict marker or diff/patch hunk.  Try d[n inside a conflict.
+*]n* - Go to the next SCM conflict marker or diff/patch hunk.  Try d]n inside a conflict.
+EOF
+}
+
+function hint-vim-registers() {
+cat <<EOF
+:help registers
+:reg
+:reg a b c - list a, b, c
+"ayy - will yank current line into the "a buffer
+"Ayy - use capital to append to register
+"ap - will paste whats in "a buffer
+"ade - delete and store in register a
+"ayiw - yank current work into register a
+"*Y - yank line into special register "*" which is the system clipboard
+"*p - paste from register "*": the system clipboard
+"_D - delete from cursor until the end of line, but don't yank
+i<Ctrl-r>a<esc> - usr Ctrl-r to retrevie value of register
+
+read only:
+: - last :ex command, read only
+% - name of current file, read only
+. - delete, read only
+_ - black hole, used to not disrupt register pool
+/ - last search, read only
+# - alternative file , other buffer, previous edited file
+
+cut and paste:
++ - system clipboard (cut/copy/paste)
+* - system selection (mouse)
+~ - drag and drop text (GTK only)
+- - small delete less than one line except when the command specifies a register with ["x]
+" - unnamed pointer, text you delete or yank end up here
+= - expression register input of i<Ctrl-r>=
+
+registers 0 most recent yanked text
+registers 1-9 are for deleted text,
+
+You can also record a whole series of edits to a register, and then apply them over and over.
+qk       - records edits into register k (q again to stop recording)
+:let @a = @b - use @ access register in expressions
+:let @a = "QWERTY - add QWERTY to a register
+:echo @a - print register
+@k       - execute recorded edits (macro)
+@@       - repeat last one
+5@@      - repeat 5 times
+"kp      - print macro k (e.g., to edit or add to .vimrc)
+"kd      - replace register k with what cursor is on
+EOF
+}
+
+function hint-vim-search-replace() {
+cat <<EOF
+:s/foo/bar/g        Change each 'foo' to 'bar' in the current line.
+:%s/foo/bar/g       Change each 'foo' to 'bar' in all lines.
+:5,12s/foo/bar/g    Change each 'foo' to 'bar' for all lines from line 5 to line 12 inclusive.
+:'a,'bs/foo/bar/g   Change each 'foo' to 'bar' for all lines from mark a to mark b inclusive.
+:.,\$s/foo/bar/g     Change each 'foo' to 'bar' for all lines from the current line (.) to the last line ($) inclusive.
+:.,+2s/foo/bar/g    Change each 'foo' to 'bar' for the current line (.) and the two next lines (+2).
+:%s/foo/bar/g       Equivalent to :1,\$s/foo/bar/g (change all lines).
+:g/^baz/s/foo/bar/g Change each 'foo' to 'bar' in each line starting with 'baz'.
+
+/copyright        - search forward
+*                 - search forward for word under cursor
+?copyright        - search backward
+#                 - search backword for word under cursor
+/\Ccopyright \C   - Case sensitive
+/\cCopyright \c   - Case insensitive
+/<copywright/>    - search only copyright
+/Copyright/e      - search copyright move to end word
+/Copyright/w      - search copyright move to beginning word
+
+daw               - delete the word under the cursor
+caw               - delete the word under the cursor and put you in insert mode
+diSYMBOL          - delete between qoutes; or other symbols; like brackets, single qoutes ..etc
+ciSYMBOL          -
+dtSYMBOL          - delete until charator
+dTSYMBOL          - delete until charator; backwards
+
+EOF
+}
+
+function hint-vim-sessions() {
+cat <<EOF
+Sessions in vim
+:mksession ~/.vim/sessions/rooster.vim - make session
+:source ~/.vim/sessions/rooster.vim - load saved session
+vim -S ~/.vim/sessions/rooster.vim - start from session
+:mks! - overwite the old session by using
+
+vim-sessions https://peterodding.com/code/vim/session/
+
+obsession.vim: continuously updated session files
+https://github.com/tpope/vim-obsession
+
+https://github.com/mhinz/vim-startify
+https://github.com/xolox/vim-session
+EOF
+}
+
+function hint-vim-snippets() {
+cat <<EOF
+SNIPPETS:
+
+" Read an empty HTML template and move cursor to title
+nnoremap ,html :-1read $HOME/.vim/.skeleton.html<CR>3jwf>a
+EOF
+}
+
+function hint-vim-tabs() {
+cat <<EOF
+Mappings for working with tabs
+<leader>tc     tab new
+<leader>tn     tab next
+<leader>tp     tab previous
+<leader>to     tab only
+<leader>tx     tab close
+<leader>tm     tab move
+<leader>te     open file in current buffers directory
+EOF
+}
+
+function hint-vim-tags() {
+cat <<EOF
+Tag Navigation Configuration
+Uses ctags to create a tag index, functions, variables, classes, etc...
+CTRL-] to jump to the first found tag
+:tag {ident} same as above
+g CTRL-] jump to the tag directly when there is only one match. If many matches, prompts the user for a file number.
+:tjump {ident} same as above
+CTRL-T, :pop jump to older tag position
+:tag jump to newer tag position
+:tags shows the tag stack
+set tags=~/.vim/tags
+
+This config option will look in the current directory for 'tags', and
+work up the tree towards root until one is found.·
+set tags=./.git/tags,./tags
+ctags -R *
+
+ctags -R --languages=ruby --exclude=.git --exclude=log .
+universal ctags http://docs.ctags.io/en/latest/index.html#
+.ctags - You can put extra configuration for ctags
+
+tagbar
+Vim plugin that displays tags in a window,
+ordered by scope (classes, constants, methods)
+https://github.com/majutsushi/tagbar
+https://www.everythingcli.org/vim-workflow-go-to-definition-with-ctags/
+http://vim.wikia.com/wiki/Browsing_programs_with_tags
+
+:tag TAB            - list the known tags
+:tag function_name  - jump to that function
+ctrl-t - goes to previous spot where you called :tag
+ctrl-] - calls :tag on the word under the cursor
+:ptag    - open tag in preview window (also ctrl-w })
+:pclose  - close preview window
+
+Keyboard command Action
+:ts <tag> <RET> Search for a particular tag
+:ts or :tselect shows the list
+:tn or :tnext goes to the next tag in that list
+:tp or :tprev goes to the previous tag in that list
+:tf or :tfirst goes to the first tag of the list
+:tl or :tlast goes to the last tag of the list
+
+To go to the first tag in the list, use the 'ptfirst' or 'ptrewind' ex command.
+To go to the last tag in the list, use the 'ptlast' ex command.
+To go to the next matching tag in the list, use the 'ptnext' ex command.
+To go to the previous matching tag in the list, use the 'ptprevious' or 'ptNext' ex command.
+
+How do browse through a list of multiple tag matches?
+To go to the first tag in the list, use the 'tfirst' or 'trewind' ex command.
+To go to the last tag in the list, use the 'tlast' ex command.
+To go to the next matching tag in the list, use the 'tnext' ex command.
+To go to the previous matching tag in the list, use the 'tprevious' or 'tNext' ex command.
+Help: :tfirst, :trewind, :tlast, :tnext, :tprevious, :tNext
+
+How do I preview a tag?
+You can use the 'ptag' ex command to open a tag in the preview window.
+You can position the cursor on a tag name and press Ctrl-W } to open the tag in the preview window.
+You can use the 'ptselect' ex command to do the equivalent of the 'tselect' ex command in the preview window.
+You can use the 'ptjump' ex command to do the equivalent of the 'tjump' ex command in the preview window.
+You can position the cursor on the tag and press Ctrl-W g} to do a :ptjump on the tag.
+Help: :preview-window, :ptag, Ctrl-W_}, :ptselect, :ptjump, Ctrl-W_g}
+
+TAG JUMPING:
+
+" Create the `tags` file (may need to install ctags first)
+command! MakeTags !ctags -R .
+
+NOW WE CAN:
+- Use ^] to jump to tag under cursor
+- Use g^] for ambiguous tags
+- Use ^t to jump back up the tag stack
+
+THINGS TO CONSIDER:
+- This doesn't help if you want a visual list of tags
+EOF
+}
+
+function hint-vimtex() {
+cat <<EOF
+vim --servername vim test.tex
+
+compile with \ll
+Forward search is easy: Just place the cursor in your tex-file and press \lv
+
+Backward search can be easily triggered if you just press <C-Enter> on the PDF
+and you jump right to the place in the terminal.
+
+Completion of:
+
+citations
+labels
+commands
+file names for figures, input/include, includepdf, includestandalone
+glossary entries
+
+text-objects:
+
+ic ac Commands
+id ad Delimiters
+ie ae LaTeX environments
+i$ a$ Inline math structures
+iP aP Sections
+
+motions and mappings:
+
+Move between section boundaries with [[, [], ][, and ]]
+Move between environment boundaries with [m, [M, ]m, and ]M
+Move between comment boundaries with [* and ]*
+Move between matching delimiters with %
+
+dse|cse ... delete/change the surrounding environment
+dsc|csc ... delete/change the surrounding command
+
+rename environments
+
+:VimtexCountWords|:VimtexCountLetters: count the number of words/letters in the document.
+:VimtexLabelsOpen|:VimtexLabelsToggle: open table of labels. 
+:VimtexCompileOutput: show the output form the compilation command (i.e. from latexmk)
+:VimtexErrors: open quickfix window if there are errors or warnings.
+:VimtexClean: clean auxilliary files like *.aux, *.out, and so on files. Use
+:VimtexClean! to remove everything, including the generated pfd file.
+
+Jumping between references and the definition
+
+jump to the definition of a label with the native Vim shortcut
+[Ctrl-]](http://vimdoc.sourceforge.net/htmldoc/tagsrch.html#CTRL-]).
+
+First, you need to install a ctags executable. See here on how to install ctags.
+
+Second, you need to install a plugin to manage tags file for you. vim-gutentags
+is a good option. It will update the tags file automatically once the source
+file has been changed. To make gutentags work, you need to tell it where your
+project root is. The easiest way is to make your project a git repository.
+
+Open the TeX source file again, the tags file should be created automatically.
+If the cursor is in \ref{some_label}, you can press Ctrl + ] to go the position
+where some_label is defined. BTW, to jump back, you can use Ctrl-T.
+
+EOF
+}
+
+function hint-vim-text-objects() {
+cat  <<EOF
+#Text Objects
+Word by punctuation       -  aw/iw
+Word by whitespace        -  aW/iW (see :help WORD)
+Sentence                  -  as/is
+Paragraph                 -  ap/ip
+Single quotes             -  a'/i'
+Double quotes             -  a"/i"
+Back ticks                -  a\`/i\`
+Parentheses               -  a)/i)
+Brackets                  -  a]/i]
+Braces                    -  a}/i}
+Angle Brackets            -  a>/i>
+Tags (<html>inner</html>) -  at/it
+Ruby Block                -  ar/ir
+
+From the (highly recommended) wellle/targets.vim plugin:
+
+, . ; : + - = ~ _ * # / | \ & $ -  an area of text delimited by the given character.
+a - a function argument.
+
+Furthermore wellle/targets.vim overrides the built-in text objects to seek to
+the next occurence of the text-object if the cursor isn’t already within one.
+
+#Third-party text objects:
+a line - (via kana/vim-textobj-line)
+the entire buffer (via kana/vim-textobj-entire)
+an indented block (via kana/vim-textobj-indent)
+a url block (via kana/vim-textobj-url)
+a comment block (via glts/vim-textobj-comment)
+Python text objects -  jeetsukumaran/vim-pythonsense
+Django templates (via mjbrownie/django-template-textobjects):
+
+#Examples
+diw, delete inner word
+daw, delete a word
+diW, delete inner WORD
+daW, delete a WORD
+yip, yank inner paragraph
+yap, yank a paragraph
+cit, change inner tag
+cat, change a tag
+
+Vim Scripts Providing Additional Text Objects
+CamelCaseMotion - words within a camel or snake-cased word.  i,w – inner camel or snake-cased word
+VimTextObj      - provides a text object for function arguments.
+ArgTextObj
+EOF
+}
+
+function hint-vimwiki() {
+cat <<EOF
+Vimwiki tips
+<leader>ww           - Open default wiki index file.
+<leader>wt           - Open default wiki index file in a new tab.
+<leader>ws           - Select and open wiki index file.
+<leader>wd           - Delete wiki file you are in.
+<leader>wr           - Rename wiki file you are in.
+<leader>wh           - Convert current wiki page to HTML.
+<leader>whh          - Convert current wiki page to HTML and open it in webbrowser
+<Enter>              - Folow/Create wiki link
+<Shift-Enter>        - Split and folow/create wiki link
+<Ctrl-Enter>         - Vertical split and folow/create wiki link
+<Backspace>          - Go back to parent(previous) wiki link
+<Tab>                - Find next wiki link
+<Shift-Tab>          - Find previous wiki link
+
+Diary
+[number] <leader>ww             - open index file for wiki
+[number] <leader>wi             - open diary index file for wiki
+<leader>w <leader>i             - update current diary index
+[count] <leader>w <leader>y     - open diary wiki-file for yesterday of the [count]'s wiki.
+[count] <leader>w <leader>m     - open diary wiki-file for tomorrow of the [count]'s wiki.
+[number] <leader>w <leader>w    - open today’s diary file for wiki
+[number] <leader>w <leader>t    - open today’s diary file for wiki in new tab
+<C-Up>                          - open previous day’s diary
+<C-Down>                        - open next day’s diary
+
+Text Objects
+ah - section between 2 headings including empty trailing lines
+ih - section between 2 headings excluding empty trailing lines
+
+aH - A header including all of its subheaders. [count] is 2, include parent header, [count] is 3, include the grandparent
+iH - Like 'aH', but excluding the header itself and trailing empty lines.
+
+a\ table cell
+i\ inner table cell
+ac table column
+ic inner table column
+
+vimwiki with markdown support https://github.com/jordypotman/dotfiles/blob/master/vimrc
+http://www.rosipov.com/posts/3/
+http://blog.mague.com/?p=602
+EOF
+}
+
+function hint-vim-visual-mode() {
+cat  <<EOF
+v% - if the cursor is on the starting/ending parenthesis
+vib - if the cursor is inside the parenthesis block
+vi" - for double quotes
+vi' - for single quotes
+viB - You want to select a curly brace block (very common on C-style languages):
+vi{ - You want to select a curly brace block (very common on C-style languages):
+ggVG - You want to select the entire file:
+EOF
+}
+
+function hint-vim-splits() {
+cat <<EOF
+Create splits
+Ctrl-w n new buffer in a horizontal split
+Ctrl-w s :split :sp - Horizontally split current window in two
+Ctrl-w v :vsplit :vs - Vertically split current window in two
+Ctrl-w q :q - close a split
+ctrl-w up arrow - move cursor up a split
+Ctrl-w o :on - close all other window but the current window
+Ctrl-w w - to move the cursor clockwise from window to window
+ctrl-w ctrl-w    - move cursor to another window (cycle)
+Ctrl-w Ctrl-(H|J|K|L) - to move the cursor to the left, top, bottom or right window
+10 ctrl-w+ - increase window size by 10 lines
+
+Ctrl+W R - Swap top/bottom or left/right split
+Ctrl+W T - Break out current window into a new tabview
+
+Splits size
+ctrl-w [N] - Decrease current window height by N (default 1)
+ctrl-w [N] + Increase current window height by N (default 1)
+ctrl-w [N] < Decrease current window width by N (default 1)
+ctrl-w [N] > Increase current window width by N (default 1)
+Ctrl-w = - balance windows sizes
+Ctrl+w | - maximize height
+Ctrl-w _ - maximize width
+:windo - to run a ex command on all windows
+:only - save this window close others
+:Sexplore for horizontal file explorer.
+:Vexplore for vertical file explorer.
+:Vexplore! to open the file explorer on right side (instead of default left)
+EOF
+}
+
+function hint-vim-wordcomplete() {
+cat <<EOF
+Word & line completion
+completion mode ":help ins-completion"
+:help ctrl-x
+ctrl-x ctrl-n               - next/previous word completion (similar word in current file)
+ctrl-x ctrl-p               - will search back through the file you’re in for words that match
+ctrl-x ctrl-o               - omni-completion
+ctrl-x ctrl-l               - line completion
+ctrl-x ctrl-f               - file completion
+:set dictionary=/usr/share/dict/words
+ctrl-x ctrl-k               - dictionary completion
+ctrl-x ctrl-d               - definition
+ctrl-x ctrl-t               - thesaurus
+ctrl-x ctrl-s               - spelling
+ctrl-x ctrl-v               - vim commands
+ctrl-x ctrl-i               - keywords
+
+" AUTOCOMPLETE:
+" HIGHLIGHTS:
+" - ^x^n for JUST this file
+" - ^x^f for filenames (works with our path trick!)
+" - ^x^] for tags only
+" - ^n for anything specified by the 'complete' option
+
+" NOW WE CAN:
+" - Use ^n and ^p to go back and forth in the suggestion list
+EOF
+}
+
+function hint-w3m() {
+cat  <<EOF
+Hyperlink operations
+-------------------
+U: go to URL
+Esc-u: go to relative URL
+c: peek current URL
+u: peek link URL
+i: peek image URL
+L: Show all links and images
+Esc-l: Popup linkslist
+Esc-M: open in external browser
+
+Navigation operations
+---------------------
+B: Back
+s: Show history in popup selection menu and go to selected page
+R: Reload the current document
+Esc-a: Add current page to bookmarks
+Esc-b: Open a bookmarked page
+Cltr-h: View history
+
+Tab operations
+--------------
+T: open new tab
+Ctrl-q: close current tab
+{: move to previous tab
+}: move to next tab
+Esc-t: open popup tab selection menu and move to seleced tab
+Ctrl-t: open current link in a new tab
+
+Document operations
+-------------------
+v: toggle view html-source / normal view
+S: save the rendered output of the current document to a file
+Esc-s: save the current document to a file
+E: edit current document
+Esc-e: edit rendered document
+
+Image operations
+----------------
+I: view image
+i: peek image URL
+Esc-I: save image
+
+Pager operations
+----------------
+<space>: scroll one screen down
++: scroll one screen down
+Ctrl-v: scroll one screen down
+b: scroll one screen up
+-: scroll one screen up
+Esc-v: scroll one screen up
+k: move cursor up one line
+j: move cursor down one line
+K: scroll down one line
+J: scroll up one line
+<: shift screen left
+>: shift screen right
+Z: move to center line
+[: go to first link
+]: go to last link
+<tab>: move to the next link
+Esc-m: get a popup menu filled with all the links of the current page and move to the selected link.
+Ctrl-l: redraw screen
+Miscalanious operations
+Ctrl-k: view cookies
+m: toggle mouse operations (handy to select with the mouse pointer without having to pres shift)
+EOF
+}
+# }}}
+
+##---------------------------------------misc----------------------------------------------------
+
+function french-flag() {
+t=$(($(tput cols)/3))
+for FR in $(seq $(tput lines))
+    do printf "\e[44m%${t}s\e[47m%${t}s\e[41m%${t}s\e[0m\n";
+done
+}
+
+function irish-flag() {
+t=$(($(tput cols)/3))
+for FR in $(seq $(tput lines))
+    do printf "\e[46m%${t}s\e[47m%${t}s\e[33m%${t}s\e[0m\n";
+done
+}
+
+function italian-flag() {
+t=$(($(tput cols)/3))
+for FR in $(seq $(tput lines))
+    do printf "\e[46m%${t}s\e[47m%${t}s\e[41m%${t}s\e[0m\n";
+done
+}
+
+function whatinstalled() {
+which "$@" | xargs -r readlink -f | xargs -r dpkg -S;
+}
+
+function mcpstat_iter() {
+for ((i=1; i<10000; i+=1)); do echo step "$i" ; runn=$(qstat | grep mprentis | grep " r " | wc | awk '{print $1}'); \
+    qww=$(qstat | grep mprentis | grep " qw " | wc | awk '{print $1}' ) ; \
+    qwww=$(qstat | grep mprentis | grep " t " | wc | awk '{print $1}' ) ; \
+    echo running "$runn" ;echo testing "$qwww"; echo "queued " "$qww" ; sleep 10; \
+done
+}
+
+function promptlight () {
+# local BLUE="\[\033[0;34m\]"
+# local GREEN="\[\033[0;32m\]"
+# local RED="\[\033[0;31m\]"
+# local LIGHT_RED="\[\033[1;31m\]"
+# local LIGHT_GREEN="\[\033[1;32m\]"
+# local YELLOW="\[\033[1;33m\]"
+local WHITE="\[\033[1;37m\]"
+# local NO_COLOUR="\[\033[0m\]"
+
+PS1="${TITLEBAR}\
+$WHITE[\h:\$(prompt_helper_pwd)$WHITE]\$\
+$WHITE "
+PS2='> '
+PS4='+ '
+}
+
+function mylanips() {
+    if [[ "$ostype" == linux ]]; then
+        ifaces=($(ifconfig | sed 's/[ \t].*//;/^$/d' | cut -d: -f1 | tr '\n' ' '))
+    else
+        ifaces=($(ifconfig -l))
+    fi
+
+    if [[ $(ifconfig | grep -c 'inet addr:') -eq 0 ]]; then
+        ifsyntax='inet '
+        ifsep=' '
+    else
+        ifsyntax='inet addr:'
+        ifsep=':'
+    fi
+
+    i=0
+
+    while [[ $i -lt ${#ifaces[*]} ]]; do
+            printf "\t%-9s %s\n" "${ifaces[$i]}" "$(ifconfig "${ifaces[$i]}" | grep "$ifsyntax" | awk '{print $2}')"
+        ((i++))
+    done
+}
+
+function mywanip() {
+    if [[ ! -f $(command -v curl) ]]; then
+        printf '\t%-9s %s\n' "WAN" "$(wget -qO- https://ifconfig.co)"
+    else
+            printf '\t%-9s %s\n' "WAN" "$(curl -sL https://ifconfig.co)"
+    fi
+}
+
+function myip() {
+        mywanip
+        mylanips
+}
+
+# find files
+# find /home /media -type f -iname $keyword | vim -R - ;}
+
+# find starting at current dir and go recursively to sub dir
+# 	find -type f -iname $keyword | vim -R - ;}
+
+# find current dir files bigger than X size
+# useage: @size <filesize> <keyword>
+# 	keyword=$(echo "*${@:2}*" |  sed -e 's/ /*/g')
+# 	find -type f -size +${1}M -iname $keyword  | vim -R - ;}
+
+# search pdf files in current dir for keywords inside the pdfs
+# http://www.commandlinefu.com/commands/view/9189
+# @pdfgrep() { find -iname \*.pdf -print0 | xargs -0 pdfgrep -in "$@" ;}
+
+#  Process substitution
+# diff <(curl http://somesite/file1) <(curl http://somesite/file2)
+# For example, one can create a pipe and set up gzip to compress things piped to it:
+# mkfifo my_pipe
+# gzip -9 -c < my_pipe > out.gz &
+# In a separate process shell, independently, one could send the data to be compressed:
+# cat file > my_pipe
+
+# use pbzip2 to speed up zipping, Check if pbzip2 is in path; if so, set BZIP_BIN appropriately
+# type -P pbzip2 &>/dev/null && export BZIP_BIN="pbzip2"
+# Otherwise, default to standard bzip2 binary
+# [ -z $BZIP_BIN ]; export BZIP_BIN="bzip2"
+
+#  Using the above logic, I set bz as an alias to pbzip2 if available, and if not, to bzip2:
+# alias bz=BZIP_BIN
+# lzma/xz compression than with parallel bzip2. It also has a parallel implementation
+# default compression level for xz/lzma is too aggressive, IMO. For the files I have worked with, running lzma at -1
+# supports multiple cores out of the box (use -T)
