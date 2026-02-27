@@ -1,0 +1,355 @@
+#!/usr/bin/env bash
+
+# Move, but tell me what you moved and warn me if I'm going to overwrite something.
+#alias mv="mv -iv"
+# Copy, but also copy directories recursively, and tell me what you copied, oh and tell me if I'm going to overwrite something.
+alias cp="cp -riv"
+# Make directory, but tell me what you made, and make any missing directories too.
+alias mkdir='mkdir -vp'
+
+# Make directory
+alias mk_m3u='echo "#EXTM3U" > 1.m3u; ls -1v *{mp3,mkv,flac} >> 1.m3u'
+
+alias backup_twotb_music='rsync -Pav /home/mp466/Music/ /media/mp466/two_tb_drive/backup/music'
+alias mirror_twotb_music='rsync -Pav --delete /home/mp466/Music/ /media/mp466/two_tb_drive/backup/music'
+
+alias backup_Backup_Jeopardy='rsync -Pav /home/mp466/Videos/Jeopardy/ /media/mp466/Backup\ Plus/backup/movies/Jeopardy'
+#alias mirror_Backup_Jeopardy='rsync -Pav --delete /home/mp466/Videos/Jeopardy/ /media/mp466/Backup\ Plus/backup/movie/Jeopardy'
+
+alias backup_Backup_Jeopardy_new='rsync -Pav /home/mp466/Videos/Jeopardy/ /media/mp466/One\ Touch/backup/movies/Jeopardy'
+#alias mirror_Backup_Jeopardy_new='rsync -Pav --delete /home/mp466/Videos/Jeopardy/ /media/mp466/One\ Touch/backup/movie/Jeopardy'
+
+alias backup_Backup_music='rsync -Pav /home/mp466/Music/ /media/mp466/Backup\ Plus/backup/music'
+alias mirror_Backup_music='rsync -Pav --delete /home/mp466/Music/ /media/mp466/Backup\ Plus/backup/music'
+
+alias backup_Backup_music_new='rsync -Pav /home/mp466/Music/ /media/mp466/One\ Touch/backup/music'
+alias mirror_Backup_music_new='rsync -Pav --delete /home/mp466/Music/ /media/mp466/One\ Touch/backup/music'
+
+#----------------------------------- testing---------------------------------------------
+alias check_vim='find ~/.vim -name *.vim | xargs python ~/.vim/bundle/vim-lint/vimlint/vimlint.py > out.txt'
+alias calibre_upgrade="sudo -v && wget -nv -O- https://download.calibre-ebook.com/linux-installer.py | sudo python3 -c \"import sys; main=lambda:sys.stderr.write('Download failed'); exec(sys.stdin.read()); main()\""
+alias pip_upgrade='pip3 list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1 | xargs -n1 pip3 install -U'
+alias info='info --vi-keys'
+alias vw="vim -c VimwikiIndex"
+alias did="vim +'normal Go' +'r!date' ~/did.txt"
+alias screencast="ffmpeg -f alsa -ac 2 -i hw:0,0 -filter_complex amix=inputs=2:duration=first -f x11grab -r 30 -s 1366x768 -i :0.0 -acodec aac -vcodec libx264 -crf 0 -preset medium output.mp4"
+alias passcli='perl --kdb kpcli.db'
+alias bitcoin="curl -s https://api-pub.bitfinex.com/v2/ticker/tBTCUSD | awk -F',' '{print \"BTC/USD: $\" \$7}' "
+
+alias youtube-mp3='youtube-dl --ignore-errors  --restrict-filenames --extract-audio --audio-format mp3'
+
+alias newsboat-linux='newsboat -u /home/mp466/.config/newsboat/linux.urls -c /home/mp466/.local/share/newsboat/linux.cache.db'
+alias newsboat-science='newsboat -u /home/mp466/.config/newsboat/science.urls -c /home/mp466/.local/share/newsboat/science.cache.db'
+alias newsboat-seattle='newsboat -u /home/mp466/.config/newsboat/seattle.urls -c /home/mp466/.local/share/newsboat/seattle.cache.db'
+alias newsboat-podcasts='newsboat -u /home/mp466/.config/newsboat/podcast.urls -c /home/mp466/.local/share/newsboat/podcast.cache.db'
+alias newsboat-podcasts-interviews='newsboat -u /home/mp466/.config/newsboat/podcast-interview.urls -c /home/mp466/.local/share/newsboat/podcast-interview.cache.db'
+alias newsboat-podcasts-science-programming='newsboat -u /home/mp466/.config/newsboat/podcast-science.urls -c /home/mp466/.local/share/newsboat/podcast-science.cache.db'
+alias newsboat-podcasts-sports='newsboat -u /home/mp466/.config/newsboat/podcast-sports.urls -c /home/mp466/.local/share/newsboat/podcast-sports.cache.db'
+
+# This is GOLD for finding out what is taking so much space on your drives!
+alias diskspace="du -S | sort -n -r |more"
+alias ducks="du -cks * | sort -rn | head"
+alias duckss="du -ah /home/mp466  2>/dev/null | sort -n -r | head -n 20"
+alias ducksss="find $HOME -type f -printf '%s %p\n' | sort -nr | head -10"
+
+# Show me the size (sorted) of only the folders in this directory
+alias folders="find . -maxdepth 1 -type d -print | xargs du -sk | sort -rn"
+
+# pass options to free ##
+alias meminfo='free -m -l -t'
+
+# get top process eating memory
+alias psmem='ps auxf | sort -nr -k 4'
+alias psmem10='ps auxf | sort -nr -k 4 | head -10'
+
+# get top process eating cpu ##
+alias pscpu='ps auxf | sort -nr -k 3'
+alias pscpu10='ps auxf | sort -nr -k 3 | head -10'
+
+# Get server cpu info ##
+alias cpuinfo='lscpu'
+
+# To display the total used and free memory of the system:
+alias mem="free -h"
+
+# To display the total disk size of the system:
+alias disk="df -h"
+
+# ip
+alias myip="ip -br -c a"
+
+# To check the status of any system service:
+alias sstatus="sudo systemctl status"
+
+# To restart any system service:
+alias srestart="sudo systemctl restart"
+
+alias wget='wget -N -c'                        # restart wget downloads
+
+#------------------------------------ amh-------------------------------------------------
+alias amhrm='rm archive *.pdb *plot PARAMCHECK_alt  crap.dat movie movieseg_final  amhnew.out'
+alias complatex='pdflatex sample-book ; bibtex sample-book ;  texindy --language english sample-book.idx ; pdflatex sample-book ; pdflatex sample-book ; pdflatex sample-book ;'
+alias vlc='vlc -q'
+alias nvlc='/usr/bin/nvlc --no-color'
+
+#-----------------------------------------------------------------------------------------
+# https://www.topbug.net/blog/2016/11/28/a-better-ls-command/#better-color
+alias ll='ls -lhrtg'
+alias lll='ls -CF | less -R -X -F '
+alias lls='ls -lhrt --sort=size'
+alias la='ls -CF'
+alias lld='ls -d -- */'
+alias lla='eza -abghl --git --color=automatic'
+
+alias duh="du -h -d 0 [^.]*"
+alias duh_dir="du -sh */ | sort -h"
+
+alias feh='feh -B white -g 1360x768'                        # background, resolution
+alias free='free -h'                                        # human readable
+# alias freq_hist='history | awk "{print $2}" | sort | uniq -c | sort -n | tail | sort -nr'
+alias treedir='tree -d -h -L 2 .'
+alias rmi='rm -i'
+# alias weechat='weechat-curses'
+alias upgrade='sudo apt-get update && sudo apt-get upgrade' # upgrade a Ubuntu-based system
+
+# Dictionary
+alias thes='dict -d moby-thesaurus'
+alias dicts='dict -d gcide'
+alias define='~/.googler/googler --noprompt --nocolor -n 2 define '
+alias goog='~/.googler/googler --noprompt -n 1 '
+alias spp='hunspell -d en_US,en-GB,en_US-large '
+alias sp='aspell --lang=en-GB -t -c '
+
+alias mcpgrep="ps -ef | grep mp466"
+alias svn_ci="svn ci --editor-cmd 'vim +\"r ~/.subversion/temp\"'"
+alias sd="svn diff --diff-cmd ~/bin/svn-diff-meld"
+alias c="clear"
+alias x="exit"
+alias h="history"
+alias env="printenv"
+alias umount="sudo /usr/bin/killall -USR1 automount"
+
+alias gracebat="/usr/local/grace/bin/gracebat"
+alias histverify="shopt -s histverify"
+alias nohistverify="shopt -u histverify"
+alias vmd="vmd -nt"
+alias pymol='/usr/bin/pymol'
+alias ProtSkin="/home/mp466/misc/ProtSkin-1.58/ProtSkin"
+
+alias add-jep='echo "$1" >> ~/.vim/vimwiki/jeopardy/jeopardy.md'
+alias add-vimwiki='echo "$1" >> ~/.vim/vimwiki/index.md'
+alias add-vocab='echo "$1" >> ~/.vim/vimwiki/vocab.md'
+alias add-recipes='echo "$1" >> ~/.vim/vimwiki/recipes.md'
+
+alias ghostview="/usr/bin/X11/ghostview -bg white -magstep 1"
+alias xdacapo="/usr/local/programs/xdacapo/src/dacapo"
+
+alias pbcopy='xsel --clipboard --input'
+alias pbpaste='xsel --clipboard --output'
+
+# read and fzf
+alias read-wiki='vi "$(ls -d -1 ~/.vim/vimwiki/*md  ~/.vim/vimwiki/personal/*md | fzf)"'
+alias read-md='vi "$(ls -d -1 ~/.vim/md/*md | fzf)"'
+
+# surfraw
+alias sr='sr -browser=firefox'
+alias surfraw='surfraw -browser=firefox'
+
+#TMUX
+# alias tmux="term=screen-256color-bce tmux"
+alias tmux-new="tmux new-session -As $(basename "$PWD") "
+alias t-amh='tmuxp load ~/.vim/amh.yaml'
+alias t-dotfiles='tmuxp load ~/.vim/dotfiles.yaml'
+alias t-fun='tmuxp load ~/.vim/fun.yaml'
+alias t-hardware='tmuxp load ~/.vim/hardware.yaml'
+alias t-jeopardy='tmuxp load ~/.vim/jeopardy.yaml'
+alias t-lpsf='tmuxp load ~/.vim/mason.yaml'
+alias t-music='tmuxp load ~/.vim/music.yaml'
+alias t-ollama='tmuxp load ~/.vim/ollama.yaml'
+alias t-security='tmuxp load ~/.vim/security.yaml'
+alias t-test='tmuxp load ~/.vim/test.yaml'
+alias t-text='tmuxp load ~/.vim/textnews.yaml'
+alias t-update='tmuxp load ~/.vim/update.yaml'
+alias t-weather='tmuxp load ~/.vim/weather.yaml'
+alias t-warren='tmuxp load ~/.vim/warren.yaml'
+
+# SVN
+export SVN_EDITOR=vi
+export SVN=https://svn.ch.cam.ac.uk/svn/wales/groups/wales
+export MYSVN=https://svn.ch.cam.ac.uk/svn/mp466
+alias svn_ci="svn ci --editor-cmd 'vi +\"r ~/.subversion/temp\"'"
+
+alias tgiu="cd ~/GMIN/gmin_input/input/templates/unfolding"
+alias tgif="cd ~/GMIN/gmin_input/input/templates/folding"
+alias tgiq="cd ~/GMIN/gmin_input/input/templates/q_const"
+alias tgsu="cd ~/GMIN/scripts/unfolding"
+alias tgsf="cd ~/amh/scripts/gmin/scripts/folding"
+alias tgsq="cd ~/GMIN/scripts/q_const"
+
+alias tiaa="cd ~/amh/md_input/input/templates/input/alpha-anneal"
+alias tiaks="cd ~/amh/md_input/input/templates/input/alpha-con-temp/ks_test"
+alias tiabks="cd ~/amh/md_input/input/templates/input/alpha-beta-con-temp/ks_test"
+alias tibks="cd ~/amh/md_input/input/templates/input/beta-con-temp/ks_test"
+alias tiaf="cd ~/amh/md_input/input/templates/input/alpha-fofq"
+alias tigf="cd ~/amh/md_input/input/templates/input/go-fofq"
+alias tipf="cd ~/amh/md_input/input/templates/input/pfold"
+alias tiaba="cd ~/amh/md_input/input/templates/input/alpha-beta-anneal"
+alias tiabf="cd ~/amh/md_input/input/templates/input/alpha-beta-fofq"
+alias tiba="cd ~/amh/md_input/input/templates/input/beta-anneal"
+alias tibf="cd ~/amh/md_input/input/templates/input/beta-fofq"
+
+alias tsaks="cd ~/amh/md_input/input/templates/shellrun/alpha-con-temp/wt/ks_test"
+alias tsabks="cd ~/amh/md_input/input/templates/shellrun/alpha-beta-con-temp/wt/ks_test"
+
+alias tsaa="cd ~/amh/md_input/input/templates/shellrun/alpha-anneal"
+alias tsaf="cd ~/amh/md_input/input/templates/shellrun/alpha-fofq"
+alias tsaba="cd ~/amh/md_input/input/templates/shellrun/alpha-beta-anneal"
+alias tsabf="cd ~/amh/md_input/input/templates/shellrun/alpha-beta-fofq"
+alias tspf="cd ~/amh/md_input/input/templates/shellrun/pfold"
+alias tsgf="cd ~/amh/md_input/input/templates/shellrun/go-fofq"
+alias tsba="cd ~/amh/md_input/input/templates/shellrun/beta-anneal"
+alias tsbf="cd ~/amh/md_input/input/templates/shellrun/beta-fofq"
+
+#Networking
+alias chimaera="ssh -X -C mp466@chimaera.ch.cam.ac.uk"
+alias citadel="ssh -X -C mp466@citadel.ch.cam.ac.uk"
+alias cl="ssh -X -C mp466@clust.ch.cam.ac.uk"
+alias mq="ssh -X -C mp466@mek-quake.ch.cam.ac.uk"
+alias vk="ssh -X -C mp466@volkhan.ch.cam.ac.uk"
+
+# Easier navigation: .., ..., ...., ....., ~ and -
+alias ..="cd .."
+alias ...="cd ../.."
+alias ....="cd ../../.."
+
+# ------------------------------git----------------------------------
+alias gf='git fetch'
+alias gst='git status'
+alias gm='git merge'
+
+#alias g='git'
+#alias ga.='ga .'
+#alias ga='g add'
+#alias gaa='ga --all :/'
+#alias gam='gc --amend'
+#alias gama='gam --all'
+#alias gamah='gama --no-edit'
+#alias gamh='gam --no-edit'
+#alias gap='ga --patch'
+#alias gau='ga --update'
+#alias gb='g branch'
+#alias gbD='gb -D'
+#alias gbF='gb --force'
+#alias gba='gb --all'
+#alias gbc='g rev-parse --abbrev-ref head | tr -d "\n" | pbcopy'
+#alias gbd='gb --delete'
+#alias gbm='gb --move'
+#alias gbs='g bisect'
+#alias gbsb='gbs bad'
+#alias gbsg='gbs good'
+#alias gbsr='gbs reset'
+#alias gbss='gbs start'
+#alias gc.='gc .'
+#alias gc.f='gc. --fixup'
+#alias gc.m='gc. --message'
+#alias gc='g commit --verbose'
+#alias gca='gc --all'
+#alias gcaf='gca --fixup'
+#alias gcam='gca --message'
+#alias gcaw='gcam WIP'
+#alias gcf='gc --fixup'
+#alias gcl='g clone'
+#alias gcm='gc --message'
+#alias gco-='gco - '
+#alias gco.='gco . '
+#alias gco='g checkout'
+#alias gcoB='gco -B'
+#alias gcob='gco -b'
+#alias gcom='gco master'
+#alias gcop='gco --patch'
+#alias gcp='g cherry-pick'
+#alias gcpa='gcp --abort'
+#alias gcpc='gcp --continue'
+#alias gcw='gcm WIP'
+#alias gd.='gd .'
+#alias gd='g diff'
+#alias gdc='gd --cached'
+#alias gdcis='gdc --ignore-all-space'
+#alias gdcs='gdc --stat'
+#alias gdcw='gdc --color-words'
+#alias gdis='gd --ignore-all-space'
+#alias gdm='gd master'
+#alias gdms='gdm --stat'
+#alias gdmw='gdm --color-words'
+#alias gdo='gd origin/$(g rev-parse --abbrev-ref head)..head'
+#alias gdos='gdo --stat'
+#alias gds.='gds .'
+#alias gds='gd --stat'
+#alias gdw='gd --color-words'
+#alias gf='g fetch'
+#alias gfp='gf --prune'
+#alias gfu='gf upstream'
+#alias gh='g help'
+#alias gim='g imerge'
+#alias gimc='gim continue'
+#alias gimd='gim diagram'
+#alias gimf='gim finish'
+#alias gimrb='gim rebase'
+#alias gimrbm='gimrb master'
+#alias gl1='gl -1'
+#alias gl='g log --graph --boundary --pretty=format:"%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset"'
+#alias gla='gl --all'
+#alias glam='gla --ancestry-path master..'
+#alias glas='gla --stat'
+#alias glm='gl master..'
+#alias glmp='glm --patch'
+#alias glms='glm --stat'
+#alias glp='gl --patch'
+#alias gls='gl --stat'
+#alias glt='gl --tags --simplify-by-decoration'
+#alias gp='g push'
+#alias gpF='gp --force'
+#alias gpo='gp origin'
+#alias gpod='gpo --delete'
+#alias gpt='gp --tags'
+#alias gpu='gp --set-upstream origin head'
+#alias gr='g remote'
+#alias gra='gr add'
+#alias grau='gra upstream'
+#alias grb='g rebase'
+#alias grba='grb --abort'
+#alias grbc='grb --continue'
+#alias grbi='grb --interactive --autosquash'
+#alias grbim='grbi master'
+#alias grbio='grbi --onto'
+#alias grbm='grb master'
+#alias grbo='grb --onto'
+#alias grboh='grbo head'
+#alias grbom='grbo master'
+#alias grbs='grb --skip'
+#alias grbu='grb upstream/master'
+#alias grl='g log --walk-reflogs --boundary --pretty=format:"%cd %h %gd %gs"'
+#alias grm='g rm'
+#alias grs='g reset'
+#alias grs^='grs head^'
+#alias grsh='grs --hard'
+#alias grsp='grs --patch'
+#alias grv='g revert'
+#alias gs.='gs .'
+#alias gs='g status --short'
+#alias gsh='g show'
+#alias gshis='gsh --ignore-all-space'
+#alias gshs='gsh --stat'
+#alias gshw='gsh --color-words'
+#alias gst='g stash'
+#alias gstD='gst drop'
+#alias gsti='gst --include-untracked'
+#alias gstk='gst --keep-index'
+#alias gstl='gst list'
+#alias gstp='gst pop'
+#alias gstsh='gst show -p'
+#alias gstshs='gst show'
+#alias gt='g tag'
+#alias gta='gt --annotate'
+#alias gtd='gt --delete'
+#alias gtl='gt --list -n'
