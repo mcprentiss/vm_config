@@ -1,19 +1,20 @@
 # vm_config
 
 
-- Change name of VM
-sudo hostnamectl set-hostname colin
+- Change name of VM  
+sudo hostnamectl set-hostname colin  
 
-- Cuda
-
-1. Install the Prerequisites
-First, ensure you have the necessary compiler and Linux headers installed so CUDA can build its modules.
-
-Bash
-sudo apt update
-sudo apt install build-essential linux-headers-$(uname -r)
-2. Add the NVIDIA CUDA Repository
-Instead of downloading a massive .run file, use NVIDIA's cuda-keyring. This hooks directly into apt so you get future updates naturally.
+- Cuda  
+  
+1. Install the Prerequisites  
+First, ensure you have the necessary compiler and Linux headers installed so CUDA can build its modules.  
+  
+Bash  
+sudo apt update    
+sudo apt install build-essential linux-headers-$(uname -r)  
+  
+2. Add the NVIDIA CUDA Repository  
+Instead of downloading a massive .run file, use NVIDIA's cuda-keyring. This hooks directly into apt so you get future updates naturally.  
 
 Bash 
 wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
