@@ -47,6 +47,7 @@ sudo apt install -y \
     kitty \
     ranger \
     tmux \
+    tmuxp \
     dunst \
     neovim \
     bottom \
