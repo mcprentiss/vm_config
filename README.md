@@ -15,9 +15,9 @@ First, ensure you have the necessary compiler and Linux headers installed so CUD
 2. Add the NVIDIA CUDA Repository  
 Instead of downloading a massive .run file, use NVIDIA's cuda-keyring. This hooks directly into apt so you get future updates naturally.  
    
-   wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
-   sudo dpkg -i cuda-keyring_1.1-1_all.deb
-   sudo apt update
+   wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb  
+   sudo dpkg -i cuda-keyring_1.1-1_all.deb  
+   sudo apt update  
    Note: If you are on Ubuntu 22.04, simply change the ubuntu2404 part of that URL to ubuntu2204
 
 3. Install the Toolkit (The Crucial Step)    
