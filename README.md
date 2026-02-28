@@ -23,27 +23,24 @@ Instead of downloading a massive .run file, use NVIDIA's cuda-keyring. This hook
 3. Install the Toolkit (The Crucial Step)    
 Do not run sudo apt install cuda. That is a "metapackage" that bundles both the toolkit and the newest NVIDIA display driver, which often causes conflicts.  
   
-Instead, tell apt you only want the developer tools:  
+   Instead, tell apt you only want the developer tools:  
   
    sudo apt install cuda-toolkit  
 
 4. Update Your Environment Variables  
-CUDA installs itself into /usr/local/cuda, but your system doesn't know to look there yet. You need to add it to your path.  
+   CUDA installs itself into /usr/local/cuda, but your system doesn't know to look there yet. You need to add it to your path.  
 
    Open your shell config (like ~/.bashrc or ~/.zshrc):  
   
-Add these lines to the very bottom of the file  
-export PATH=/usr/local/cuda/bin${PATH:+:${PATH}}  
-export LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}  
-Save the file, and then apply the changes immediately with:  
-
+   Add these lines to the very bottom of the file  
+   export PATH=/usr/local/cuda/bin${PATH:+:${PATH}}  
+   export LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}  
+   Save the file, and then apply the changes immediately with:  
    source ~/.bashrc  # or ~/.zshrc  
 
 5. Verify the Installation  
-To make sure the compiler is installed and your path is correct, run:  
-  
-
-nvcc --version  
+   To make sure the compiler is installed and your path is correct, run:
+   nvcc --version  
   
 - fonts  
   https://github.com/chriskempson/base16-shell  
