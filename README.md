@@ -45,6 +45,9 @@ Do not run sudo apt install cuda. That is a "metapackage" that bundles both the 
 - rust
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
+- julia
+  curl -fsSL https://install.julialang.org | sh
+
 - fonts  
   https://github.com/chriskempson/base16-shell  
                                                                                
