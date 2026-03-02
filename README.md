@@ -1,5 +1,13 @@
 # vm_config
 
+- .inputrc
+.inputrc file is the configuration file for Readline,
+
+- .profile
+.profile  shell-agnostic, runs log in
+
+- .bash-profile
+.bash_profile in your home directory, it will execute it and completely ignore .profile.
 
 - Change name of VM  
 sudo hostnamectl set-hostname colin  
