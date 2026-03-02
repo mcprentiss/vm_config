@@ -42,12 +42,10 @@ Do not run sudo apt install cuda. That is a "metapackage" that bundles both the 
    To make sure the compiler is installed and your path is correct, run:
    nvcc --version  
 
-- rust
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+- rust - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-- julia
-  curl -fsSL https://install.julialang.org | sh
+- julia - curl -fsSL https://install.julialang.org | sh
 
-- fonts  
-  https://github.com/chriskempson/base16-shell  
+- fonts - https://github.com/chriskempson/base16-shell  
                                                                                
+- dasht - https://github.com/sunaku/dasht
