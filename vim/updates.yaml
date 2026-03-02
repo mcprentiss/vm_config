@@ -1,0 +1,75 @@
+session_name: Updates
+windows:
+  # Emptiness will simply open a blank pane, if no shell_command_before.  All these are equivalent
+  - window_name: git
+    panes:
+    - shell_command:
+        # https://superuser.com/questions/240223/warning-line-editing-not-enabled
+        - source ~/.vim/scripts/gitinstall-update.sh
+  - window_name: fastfetch
+    panes:
+    - shell_command:
+        - fastfetch
+  - window_name: dasht
+    panes:
+    - shell_command:
+        - cd
+        - echo dasht-sever
+        - dasht-docsets
+        - dasht-docsets-update
+  - window_name: SpiderOak
+    panes:
+    - shell_command:
+        - ~/SpiderOak\ Hive/dotfiles
+  - window_name: upgrade
+    panes:
+    - shell_command:
+        - dpkg -l > ~/.vim/packages.list
+        - upgrade
+  - window_name: Cargo packages updater
+    panes:
+    - shell_command:
+        - cargo install --list > ~/.vim/rust.list
+        - cat  ~/.vim/vimwiki/comp/rust_cli.md
+        - echo cargo install-update -a
+  - window_name: Rust updater
+    panes:
+    - shell_command:
+        - echo rustup update stable
+        - echo juliaup update
+  - window_name: Ruby gems updater
+    panes:
+    - shell_command:
+        - echo gem - update Ruby gems
+        - echo gem update
+  - window_name: Javascript npm updater
+    panes:
+    - shell_command:
+        - echo Javascript
+        - echo npm update
+  - window_name: pyenv
+    panes:
+    - shell_command:
+        - echo cd ~/.pyenv; git up
+  - window_name: pipx
+    panes:
+    - shell_command:
+        - echo pipx - Install and Run Python Applications in Isolated Environments
+        - echo python3 -m pip install --user --upgrade pipx
+        - pipx list > ~/.vim/pipx.list
+        - cat  ~/.vim/vimwiki/comp/pipx_cli.md
+        - echo pipx upgrade-all
+  - window_name: poetry Python packaging and dependency management made easy
+    panes:
+    - shell_command:
+        - echo poetry - Python packaging and dependency management made easy
+        - echo poetry self update
+  - window_name: Go updater
+    panes:
+    - shell_command:
+        - echo go get -u all
+        - echo go get -u -v -f all
+          # - window_name: perl updater
+          #    panes:
+          #    - shell_command:
+          #        - echo perl -MCPAN -e shell
