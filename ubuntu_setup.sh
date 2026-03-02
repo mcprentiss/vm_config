@@ -41,6 +41,7 @@ sudo apt install -y \
     bat \
     fzf \
     ripgrep \
+    pipx \
     zsh
 
 echo "--- Installing Power User Utilities ---"
