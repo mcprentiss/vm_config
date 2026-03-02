@@ -16,7 +16,8 @@ sudo apt install -y \
     wget \
     ca-certificates \
     gnupg \
-    lsb-release
+    lsb-release \
+    python3-pip
 
 # 3. Install i3 Ecosystem & Utilities
 echo "--- Installing i3wm Desktop Utilities ---"
