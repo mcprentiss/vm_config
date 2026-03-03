@@ -75,7 +75,8 @@ rm /tmp/fastfetch.deb
 
 echo "Fastfetch installed successfully!"
 
-
+# 4. pipx install
+pipx install  bandit buku doc2dash fpm mackup papis pipenv pre-commit ruff trash-cli  uv yt-dlp 
 
 # Fix 'bat' command name (Ubuntu calls it batcat)
 mkdir -p ~/.local/bin
