@@ -51,6 +51,7 @@ Do not run sudo apt install cuda. That is a "metapackage" that bundles both the 
    nvcc --version  
 
 - rust - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+- cargo install fd-find
 
 - julia - curl -fsSL https://install.julialang.org | sh
 
