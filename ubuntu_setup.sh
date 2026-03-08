@@ -20,7 +20,11 @@ sudo apt install -y \
     python3-pip \ 
     meson \ 
     ninja-build \
-    gfortran
+    gfortran \
+    gfortran-13 \
+    gfortran-13-x86-64-linux-gnu \ 
+    gfortran-x86-64-linux-gnu \
+    libgfortran-13-dev
 
 # 2.3 Install pyenv developement libraries 
 echo "--- Installing pyenv developement libraries ---"
