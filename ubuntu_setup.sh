@@ -19,7 +19,8 @@ sudo apt install -y \
     lsb-release \
     python3-pip \ 
     meson \ 
-    ninja-build
+    ninja-build \
+    gfortran
 
 # 2.3 Install pyenv developement libraries 
 echo "--- Installing pyenv developement libraries ---"
