@@ -17,7 +17,9 @@ sudo apt install -y \
     ca-certificates \
     gnupg \
     lsb-release \
-    python3-pip
+    python3-pip \ 
+    meson \ 
+    ninja-build
 
 # 2.3 Install pyenv developement libraries 
 echo "--- Installing pyenv developement libraries ---"
