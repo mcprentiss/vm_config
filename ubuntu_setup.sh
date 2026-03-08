@@ -62,7 +62,6 @@ sudo apt install -y \
     pipx \
     zsh \
     btop \
-    neovim \
     bash-argsparse \  
     bash-builtins \   
     bash-completion
