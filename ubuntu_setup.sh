@@ -61,7 +61,11 @@ sudo apt install -y \
     ripgrep \
     pipx \
     zsh \
-    btop
+    btop \
+    neovim \
+    bash-argsparse \  
+    bash-builtins \   
+    bash-completion
 
 echo "--- Installing Power User Utilities ---"
 sudo apt install -y \
